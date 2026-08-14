@@ -27,4 +27,5 @@ Supported languages:
 
 - [Product Discovery](docs/product/discovery.md)
 - [Success Metrics](docs/product/success_metrics.md)
-- [Use Case Matrix](docs/product/use_case_matrix.csv)
+- [Use Case Matrix](docs/product/use_case.csv)
+- [Scenario](docs/product/scenario.csv)
