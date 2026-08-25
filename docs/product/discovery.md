@@ -1,130 +1,173 @@
 # Product Discovery
 
-## Business Context
+## 1. Product Overview
 
-NordShop GmbH is a fictional German e-commerce company.
+The NordShop Customer Support Copilot is a Generative AI assistant for customer support employees of the fictional German e-commerce company NordShop GmbH.
 
-The Customer Support department has approximately 60 employees.
-Customers contact support via email and web chat.
+The Copilot helps support employees:
 
-Support employees currently need to search across several sources
-when answering customer requests.
+- understand customer requests;
+- identify the relevant supported customer intent;
+- retrieve relevant approved business information;
+- retrieve verified operational information where required;
+- determine the appropriate handling path;
+- prepare grounded customer-facing response drafts.
 
-## Business Problem
+The Copilot is an internal human-in-the-loop decision-support system. It does not communicate directly with customers.
 
-The project aims to:
+## 2. Business Context
+
+NordShop receives approximately 30,000–40,000 customer requests per month.
+
+The support organization consists of approximately 60 employees.
+
+Customer requests are mainly received through:
+
+- email;
+- web chat.
+
+Most requests are in German, with a smaller share in English.
+
+Support employees currently spend significant time interpreting requests, searching for relevant policies, retrieving operational information, determining the appropriate support process, and preparing repetitive responses.
+
+Increasing support volume without proportional growth in support staffing is therefore a relevant business objective.
+
+## 3. Business Problem
+
+Customer support employees often need to combine information from multiple sources before they can respond reliably.
+
+Depending on the request, handling may require:
+
+1. understanding the customer intent;
+2. identifying the relevant business case;
+3. retrieving approved policy information;
+4. retrieving verified operational information;
+5. determining the appropriate handling path;
+6. preparing a customer-facing response.
+
+This manual process increases handling effort and can lead to inconsistent responses.
+
+## 4. Business Goal
+
+The primary business goals are to:
 
 - reduce customer request handling time;
-- improve consistency of customer responses;
-- improve support quality;
-- enable increasing support volume without proportional staff growth.
+- improve response consistency;
+- maintain or improve support quality;
+- increase the number of requests handled by the existing support organization;
+- support increasing request volume without proportional staff growth.
 
-Staff reduction is not an explicit goal of the MVP.
+Reducing staff is not an MVP objective.
 
-## Users
+## 5. Product Goal
 
-The primary users are Customer Support employees.
+The MVP combines customer requests, approved business knowledge, and verified operational information to support customer service employees in handling supported requests consistently and efficiently.
 
-The AI system is an internal copilot and does not communicate
-directly with customers in the MVP.
+The intended output is:
 
-## MVP Scope
+- a recommended handling action;
+- relevant supporting information;
+- a grounded customer-facing response draft where appropriate.
 
-Initial supported topics:
+The support employee remains responsible for reviewing the result and sending the final response.
 
-- Shipping
-- Returns
-- Refund Policy
-- Order Status
+## 6. Target Users
 
-Supported customer languages:
+The primary users are NordShop customer support employees.
 
-- German
-- English
+The MVP is not a public customer chatbot. Customers do not interact directly with the Copilot.
 
-The response should normally be generated in the customer's language.
+## 7. MVP Scope
 
-## Expected System Behaviour
+The MVP supports customer requests in the following business areas:
 
-The assistant should:
+- Order Status;
+- Shipping;
+- Returns and Withdrawal;
+- Refunds.
 
-- analyse customer requests;
-- use internal company policies;
-- use order information when required;
-- generate a suggested customer response;
-- show the business sources used for the response;
-- indicate when available information is insufficient;
-- allow the support employee to review and edit the response.
+The detailed supported functionality and routing boundaries are defined in:
 
-If the customer's intent cannot be determined reliably,
-the system should not invent an answer. It should request
-clarification or recommend escalation.
+- `docs/product/use_cases.csv`;
+- `docs/product/scenarios.csv`;
+- `docs/product/acceptance_criteria.csv`.
 
-## Out of Scope
+Detailed business rules are defined in the approved Knowledge Base policies.
 
-The AI must not autonomously:
+Business processes that do not map to the supported MVP functionality are outside the current product scope.
 
-- issue refunds;
-- cancel orders;
-- modify orders;
-- modify customer data;
-- perform financial transactions;
-- communicate directly with customers.
+## 8. Supported Languages
 
-## Known Information Sources
+The MVP supports customer requests in:
 
-### Customer Request
+- German;
+- English.
 
-Free-text customer message.
+Detailed handling of unsupported language input is defined in the product scenarios and acceptance criteria.
 
-Possible information:
+## 9. Human-in-the-Loop Principle
 
-- language;
-- customer intent;
-- order ID, if provided;
-- description of the problem;
-- additional customer-provided context.
+The Copilot supports, but does not replace, the customer support employee.
 
-Customer statements are not considered authoritative for the
-actual order status.
+A human employee reviews the Copilot result before anything is communicated to the customer.
 
-### Knowledge Base
+Business actions requiring human handling remain under the responsibility of authorized NordShop employees.
 
-Current known documents:
+## 10. Information Sources
 
-- Shipping Policy;
-- Returns Policy;
-- Refund Policy.
+The MVP uses three primary runtime information sources:
 
-These contain company rules, procedures, exceptions and
-business conditions.
+1. Customer Request
+2. Approved Knowledge Base
+3. Order Management System (OMS)
 
-### Order Management System
+The Approved Knowledge Base contains the business information used for shipping, returns, withdrawal, and refund-related responses.
 
-Currently known fields:
+The OMS provides verified operational information required for order-specific processing.
 
-- order_id
-- customer_id
-- order_date
-- shipment_status
-- estimated_delivery_date
-- delivered_at
-- tracking_number
-- items
-- total_amount
+Detailed business rules belong to the Knowledge Base. Detailed operational fields and relationships belong to the OMS Data Contract.
 
-### Historical Support Requests
+## 11. Product Principles
 
-Historical customer requests exist, but their quality and
-availability have not yet been assessed.
+The MVP follows these high-level principles:
 
-They are therefore not a required information source for the MVP.
+- use approved business information and verified operational information where required;
+- keep customer-reported information distinguishable from verified system information;
+- do not invent unavailable information;
+- route cases requiring human handling rather than pretending an action has been completed;
+- keep the support employee in control of the final customer communication.
 
-## Open Questions
+Detailed routing behavior is defined in the frozen Scenarios and Acceptance Criteria.
 
-- What exactly constitutes insufficient information?
-- Which criteria define an acceptable AI-generated response?
-- What is the complete list of business-critical cases?
-- Which additional order data may be required for refund decisions?
-- Which cases require mandatory escalation?
-- Which information should be shown to employees as answer sources?
+## 12. MVP Non-Goals
+
+The MVP does not aim to:
+
+- replace customer support employees;
+- communicate directly with customers;
+- autonomously execute business or financial actions;
+- support business processes outside the defined MVP scope.
+
+## 13. Product Outcome
+
+The intended MVP outcome is a support copilot that can:
+
+1. understand customer requests within the supported scope;
+2. retrieve relevant approved and verified information;
+3. determine the appropriate handling path;
+4. prepare grounded response drafts where appropriate;
+5. keep the support employee in control.
+
+## 14. Related Product Documentation
+
+- [Success Metrics](success_metrics.md)
+- [Use Cases](use_cases.csv)
+- [Scenarios](scenarios.csv)
+- [Acceptance Criteria](acceptance_criteria.csv)
+- [OMS Data Contract](../data/oms_data_contract.md)
+
+Approved business knowledge is maintained separately in:
+
+- `data/knowledge_base/shipping_policy.md`
+- `data/knowledge_base/returns_policy.md`
+- `data/knowledge_base/refund_policy.md`

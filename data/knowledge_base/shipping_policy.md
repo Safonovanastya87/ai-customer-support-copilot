@@ -1,205 +1,363 @@
-# NordShop Shipping Policy
+# Shipping Policy
 
-## 1. Scope
+## 1. Purpose
 
-This policy defines the standard NordShop rules for handling customer requests related to:
+This policy defines the approved NordShop business information used by the Customer Support Copilot for shipping- and delivery-related customer requests.
 
-- shipment status;
-- expected delivery;
+It supports the frozen Shipping Use Cases covering:
+
+- general shipping information;
+- delivery-delay questions for a specific order;
+- delivered-but-not-received reports.
+
+Detailed routing behavior is defined in:
+
+- `docs/product/scenarios.csv`;
+- `docs/product/acceptance_criteria.csv`.
+
+Operational order, shipment, and delivery data are defined in:
+
+- `docs/data/oms_data_contract.md`.
+
+## 2. Scope
+
+This policy applies to NordShop MVP orders delivered within Germany.
+
+The policy covers:
+
+- standard delivery options;
+- shipping costs and free-shipping threshold;
+- available carrier selection;
+- standard delivery target;
+- order-specific delivery information;
 - delivery delays;
-- tracking information;
-- delivered-but-not-received cases.
+- delivered-but-not-received situations;
+- tracking information.
 
-The policy applies to orders that can be identified in the NordShop Order Management System (OMS).
+NordShop offers only Standard Delivery in the MVP.
 
-The delivery targets and escalation thresholds defined below are internal NordShop service rules for the MVP and must not be presented as statutory German delivery periods or legal entitlements.
+Express, premium, same-day, international, and other special delivery services are not part of the MVP.
 
----
+Direct carrier-system investigation and carrier-side operational details are outside the MVP.
 
-## 2. Source of Operational Information
+## 3. Delivery Area
 
-The Order Management System (OMS) is the authoritative source for current operational order and shipment information.
+NordShop delivers MVP orders only within Germany.
 
-Relevant information may include:
+International delivery is not offered in the MVP.
 
-- order identification;
-- customer identification;
-- shipment status;
-- estimated delivery date;
-- delivery date;
-- tracking number.
+## 4. Delivery Method
 
-Customer statements are treated as reported customer context and do not replace verified operational information stored in OMS.
+NordShop offers one delivery service level:
 
-If a customer statement conflicts with OMS regarding a current operational shipment fact, the OMS value remains the authoritative operational fact while the customer's statement is preserved as additional context.
+**Standard Delivery**
 
----
+No express or premium delivery option is offered in the MVP.
 
-## 3. Standard Delivery Target
+## 5. Shipping Costs
+
+Standard Delivery costs:
+
+- **€4.99** when the order value is below **€30.00**;
+- **free of charge** when the order value is **€30.00 or more**.
+
+For the purpose of this rule:
+
+> **Order value = total price of the ordered items after discounts, excluding shipping costs.**
+
+The Copilot must not invent alternative shipping prices, thresholds, surcharges, or promotional shipping rules.
+
+## 6. Carrier Selection
+
+NordShop may offer several carriers for Standard Delivery.
+
+For example, available options may include carriers such as DHL or Hermes.
+
+The customer may select one of the carrier options offered by NordShop during checkout.
+
+The available carrier options may vary.
+
+The Shipping Policy does not define a permanently fixed carrier list.
+
+The carrier selected for the original outbound delivery does not determine the carrier used for a later return. Return-carrier rules are defined in the Returns Policy.
+
+The Copilot must not claim that a specific carrier is available for a specific order unless that information is provided by an approved source.
+
+## 7. Standard NordShop Delivery Target
 
 NordShop's standard delivery target is:
 
-**2–5 business days**
+**3 NordShop business days after the order date.**
 
-This is an internal NordShop service target.
+For this internal target:
 
-For a specific order, the `estimated_delivery_date` stored in OMS is the applicable operational delivery estimate.
+- the order date is day 0;
+- the next NordShop business day is day 1;
+- NordShop business days are Monday through Friday.
 
-The order-specific estimated delivery date takes precedence over the general 2–5-business-day delivery target when answering an order-specific request.
+The standard delivery target is an internal NordShop service target.
 
----
+It is not:
 
-## 4. Business Day Definition
+- a guaranteed delivery date;
+- an order-specific estimated delivery date;
+- a statutory delivery deadline.
 
-For the MVP, a business day is:
+## 8. Order-Specific Estimated Delivery Date
 
-**Monday through Friday**
+For a specific order, OMS may provide:
 
-Saturdays and Sundays are not counted as business days.
+`estimated_delivery_date`
 
-Public holidays are not modeled separately in the MVP.
+This value represents the current verified operational delivery expectation for that order.
 
-This definition is used consistently for all business-day calculations in this policy.
+The order-specific estimated delivery date is separate from the general 3-business-day NordShop delivery target.
 
----
+It may be earlier than, equal to, or later than the standard target.
 
-## 5. Expected Delivery Date
+For a specific-order delivery question, the OMS estimated delivery date is the relevant verified delivery expectation when it is available.
 
-An order is not considered overdue while the current date is on or before the `estimated_delivery_date` stored in OMS.
+The Copilot must not derive or invent a new order-specific delivery date from:
 
-If the customer reports a delay before the estimated delivery date has passed:
+- the order date;
+- the general 3-business-day target;
+- customer statements;
+- general shipping assumptions;
+- unverified carrier information.
 
-- the current shipment status may be provided;
-- the estimated delivery date may be communicated;
-- the shipment must not be classified as overdue solely because the customer expected it earlier.
+## 9. Delivery Delay
 
-No investigation or remedy should be presented as necessary solely because the estimated delivery date has not yet been reached.
+For the standard NordShop MVP delay flow, the verified order-specific `estimated_delivery_date` is used to assess whether the shipment is still within its expected delivery window.
 
----
+This rule applies when OMS does not show the shipment as `DELIVERED`.
 
-## 6. Delayed Shipments
+### Estimated delivery date has not passed
 
-A shipment is considered delayed when:
+If the current processing date is on or before the verified `estimated_delivery_date`, the shipment is still within its current order-specific expected delivery window.
 
-- the `estimated_delivery_date` has passed; and
-- the parcel has not been delivered.
+The Copilot may communicate the verified shipment information and the available estimated delivery date.
 
-### 6.1 NordShop Grace Period
+It must not:
 
-As an internal NordShop customer-support rule, a grace period of:
+- describe the shipment as overdue;
+- invent a delay reason;
+- invent a revised delivery date;
+- promise delivery on an unsupported date.
 
-**2 business days**
+### Estimated delivery date has passed
 
-applies after the estimated delivery date.
+If the current processing date is after the verified `estimated_delivery_date` and OMS does not show the shipment as `DELIVERED`, NordShop treats the case as requiring human delivery investigation.
 
-During the grace period:
+The Copilot may preserve and communicate the verified shipment context.
 
-- the customer may be informed that the shipment is delayed;
-- the current verified shipment information should be provided when available;
-- the remaining waiting period may be explained;
-- standard shipment investigation is not yet required;
-- no investigation, refund, replacement, or other remedy may be presented as already initiated or approved unless confirmed by an approved source.
+It must not invent:
 
-### 6.2 Delay Beyond the Grace Period
+- the cause of the delay;
+- a revised delivery date;
+- carrier investigation results;
+- cancellation approval;
+- replacement approval;
+- refund approval;
+- compensation.
 
-If the parcel remains undelivered after the 2-business-day grace period, the case requires human investigation.
+### Estimated delivery date unavailable
 
-Relevant verified shipment information should be made available to the support employee.
+`estimated_delivery_date` is optional in the OMS data model.
 
-The system must not claim that an investigation, refund, replacement, compensation, or other remedy has already been initiated, approved, or completed unless confirmed by an approved source.
+If the customer reports a specific delivery delay and the verified estimated delivery date is unavailable, the Copilot must not create an ETA or determine that the shipment is overdue from the general delivery target alone.
 
----
+The applicable handling for insufficient verified information is defined in the frozen Scenarios and Acceptance Criteria.
 
-## 7. Delivered but Not Received
+## 10. Delivered but Not Received
 
-If OMS reports the parcel as delivered but the customer states that the parcel was not received, the case requires human investigation.
+A customer may report that a parcel was not received even though OMS records the shipment as `DELIVERED`.
 
-Both facts must be preserved:
+Both pieces of information must remain distinct:
 
-- OMS reports the parcel as delivered;
-- the customer reports that the parcel was not received.
+- OMS records the shipment as delivered;
+- the customer reports non-receipt.
 
-The customer statement must not be rejected solely because OMS shows a delivered status.
+NordShop treats this as a delivery dispute requiring human handling.
 
-At the same time, the customer statement does not replace the OMS operational status.
+The Copilot must not:
 
-The system must not:
+- overwrite the verified OMS delivery status with the customer's statement;
+- dismiss the customer's report solely because OMS shows `DELIVERED`;
+- determine responsibility for the disputed delivery;
+- claim that the parcel was lost;
+- invent where or to whom the parcel was delivered;
+- promise a replacement, cancellation, refund, or compensation.
 
-- state that the customer personally received the parcel;
-- promise or approve a refund;
-- promise or approve a replacement;
-- claim that an investigation has already been initiated unless confirmed by an approved source.
+Detailed routing is defined in the frozen Scenarios and Acceptance Criteria.
 
-A delivered-but-not-received dispute must be resolved before downstream standard return or return-based refund eligibility is determined.
+## 11. Tracking Information
 
----
+A tracking number may be available for a specific order.
 
-## 8. Tracking Information
+If available in OMS, it may be used as verified operational information.
 
-If a tracking number is available in OMS, it may be included in the customer-facing response.
+A missing tracking number alone:
 
-If no tracking number is available:
+- does not mean that the order was not shipped;
+- does not make the shipment information invalid;
+- does not by itself require human investigation if sufficient verified information remains available.
 
-- no tracking number may be invented or inferred;
-- the absence of a tracking number alone does not require human investigation;
-- other verified shipment information may still be provided when sufficient to answer the request.
+The Copilot must not invent:
 
-A missing tracking number must not be treated as proof that the shipment has not been sent.
+- tracking numbers;
+- tracking links;
+- parcel locations;
+- scan events;
+- delivery attempts.
 
----
+## 12. Carrier Information for a Specific Order
 
-## 9. Missing or Unavailable Shipment Information
+General carrier options may be described from this policy.
 
-A reliable order-specific answer must not be produced when information required to resolve the request is unavailable or unusable.
+Specific carrier-side operational information must not be invented or inferred.
 
-Examples include:
+Direct carrier-system integration is outside the MVP.
 
-- OMS cannot be accessed;
-- the required lookup fails;
-- the supplied order cannot be matched;
-- a required shipment field is missing or unusable.
+The Copilot must not invent:
 
-If the missing information can reasonably be supplied or corrected by the customer, clarification should be requested.
+- carrier delay reasons;
+- current parcel locations;
+- delivery-attempt details;
+- depot or parcel-shop information;
+- carrier investigation results;
+- revised carrier ETAs.
 
-If required internal operational information is unavailable, the case requires human handling.
+If carrier-side information is required to resolve a case, it must be obtained through the appropriate human or operational process.
 
-Missing operational facts must not be invented, assumed, or inferred.
+## 13. Shipping Information for a Specific Order
 
----
+Order-specific shipping and delivery information must come from verified OMS data.
 
-## 10. Human Investigation Rules
+Depending on the request and available fields, relevant information may include:
 
-A shipping-related case requires human investigation when:
+- current shipment status;
+- order-specific estimated delivery date;
+- confirmed delivery information;
+- tracking number, if available.
 
-1. the shipment remains undelivered after the 2-business-day grace period;
-2. OMS reports the parcel as delivered but the customer reports that it was not received;
-3. required internal shipment information is unavailable or unusable and a reliable answer cannot be produced;
-4. the Shipping Policy does not provide a reliable rule for resolving the case.
+Customer statements may provide context but do not replace verified OMS operational information.
 
-Further investigation, discretionary decisions, or business actions remain with a human support employee.
+## 14. Customer-Reported and Verified Information
 
----
+The Copilot must distinguish between:
 
-## 11. Policy Boundaries
+- information reported by the customer;
+- verified operational information from OMS.
 
-The Shipping Policy determines how shipment-related operational situations are handled.
+Example:
 
-If an unresolved shipping condition affects a downstream return or refund decision, the shipping condition must be resolved first.
+```text
+Customer Request:
+"My parcel has not arrived."
 
-For example:
+OMS:
+shipment_status = DELIVERED
+```
 
-- a delivered-but-not-received dispute must not be treated as a normal confirmed delivery for return eligibility;
-- a refund must not be determined solely because OMS shows `DELIVERED` while receipt is disputed by the customer.
+The customer statement remains customer-reported information.
 
----
+The OMS value remains the verified operational status.
 
-## 12. Standard MVP Rules
+Neither should silently overwrite the other.
 
-For the MVP:
+The expected handling of a material conflict is defined in the frozen Global Scenarios and Acceptance Criteria.
 
-- standard NordShop delivery target: **2–5 business days**;
-- delayed-shipment grace period: **2 business days**;
-- business days: **Monday through Friday**;
-- public holidays: **not modeled separately**;
-- OMS is the authoritative operational source;
-- delivered-but-not-received cases require human investigation.
+## 15. Restricted Shipping-Related Actions
+
+The Copilot provides decision support and response drafts.
+
+It does not autonomously:
+
+- cancel or modify an order;
+- approve a replacement;
+- approve or initiate a refund;
+- determine compensation;
+- perform a financial transaction;
+- initiate or complete a carrier investigation;
+- modify verified OMS information;
+- claim that a restricted action has been completed when it has not.
+
+Requests requiring such actions are handled according to the applicable frozen Scenario and Acceptance Criteria.
+
+## 16. Relationship to Returns and Refunds
+
+Shipping, returns, and refunds are related but separate business concepts.
+
+This Shipping Policy defines:
+
+- outbound delivery area;
+- outbound delivery method;
+- outbound shipping cost;
+- free-shipping threshold;
+- general carrier selection;
+- delivery targets;
+- delivery and tracking information;
+- delivery-delay business rules.
+
+The Returns Policy is the source of truth for the physical return process, return shipping, and the return carrier.
+
+The Refund Policy is the source of truth for repayment rules, including treatment of the original Standard Delivery cost.
+
+The three types of information must remain distinct even when they relate to the same order.
+
+## 17. Missing Information
+
+This policy must not be supplemented with invented shipping rules or operational facts.
+
+If a shipping request requires approved policy information that is not available, the Copilot follows the handling defined in the frozen Scenarios and Acceptance Criteria.
+
+If a specific-order request requires verified operational information, that information must come from OMS.
+
+Missing optional information, such as a tracking number, does not by itself make the entire request unanswerable when sufficient verified information remains available.
+
+## 18. Policy Boundaries
+
+This policy defines:
+
+- delivery within Germany;
+- Standard Delivery as the only MVP delivery service level;
+- shipping price and free-shipping threshold;
+- the definition of order value used for that threshold;
+- general carrier-selection rules;
+- NordShop's standard delivery target;
+- the role of the order-specific estimated delivery date;
+- the business interpretation of a delivery delay;
+- the treatment of delivered-but-not-received reports;
+- approved boundaries for tracking and carrier information.
+
+This policy does not define:
+
+- OMS entities or field schemas;
+- customer-intent classification;
+- language handling;
+- detailed routing logic;
+- `ANSWER`, `CLARIFY`, `ESCALATE`, or `OUT_OF_SCOPE` conditions;
+- technical architecture;
+- customer identification mechanisms;
+- return or refund business rules.
+
+Those concerns are defined in the appropriate product, data, or knowledge-base documents.
+
+## 19. Related Documentation
+
+### Product
+
+- `docs/product/discovery.md`
+- `docs/product/use_cases.csv`
+- `docs/product/scenarios.csv`
+- `docs/product/acceptance_criteria.csv`
+
+### Data
+
+- `docs/data/oms_data_contract.md`
+
+### Knowledge Base
+
+- `data/knowledge_base/shipping_policy.md`
+- `data/knowledge_base/returns_policy.md`
+- `data/knowledge_base/refund_policy.md`

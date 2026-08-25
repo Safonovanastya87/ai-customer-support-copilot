@@ -1,290 +1,285 @@
-# NordShop Refund Policy
+# Refund Policy
 
-## 1. Scope
+## 1. Purpose
 
-This policy defines the standard NordShop rules for determining and explaining refund eligibility and refund processing.
+This policy defines the approved NordShop business information used by the Customer Support Copilot for refund-related customer requests.
 
-For the MVP, the standard refund flow covered by this policy is:
+It supports the frozen refund Use Cases covering:
 
-**a refund following a standard return under the NordShop Returns Policy**
+- general refund information;
+- refund rules for a specific case;
+- refund status information;
+- customer requests for refund-related actions.
 
-Refund requests based on circumstances outside this standard return-based refund flow require human review unless another approved NordShop policy explicitly defines the applicable rule.
+Detailed routing behavior is defined in:
 
-Examples outside the standard return-based refund flow include:
+- `docs/product/scenarios.csv`;
+- `docs/product/acceptance_criteria.csv`.
 
-- disputed delivery;
-- discretionary compensation;
-- goodwill refunds;
-- other exceptional refund requests not defined by this policy.
+Operational order, item, return, and refund data are defined in:
 
-The processing targets defined below are internal NordShop service rules and must not be presented as statutory German refund periods.
+- `docs/data/oms_data_contract.md`.
 
----
+## 2. Scope
 
-## 2. Source of Operational Information
+The standard NordShop MVP refund flow applies to withdrawal and return cases covered by the Returns Policy.
 
-The Order Management System (OMS) is the authoritative source for operational return and refund information.
+The Returns Policy is the source of truth for the modeled withdrawal-right scope and return eligibility assumptions.
 
-Relevant information may include:
+Refunds based on other business processes, such as warranty, defect, damage, compensation, or other unsupported claims, are outside the refund MVP scope.
 
-- order identification;
-- customer identification;
-- purchased items;
-- return status;
-- return receipt date;
-- refund status;
-- refund initiation date.
+## 3. General Refund Rule
 
-Customer statements may provide additional context but do not replace verified OMS information.
+For a standard full withdrawal-based refund, NordShop refunds:
 
-Only information belonging to the correctly identified customer, order, and item may be used.
+- the price of the goods covered by the withdrawal;
+- the original NordShop Standard Delivery cost actually paid by the customer.
 
----
+The Shipping Policy is the source of truth for the applicable Standard Delivery pricing and free-shipping rules.
 
-## 3. Relationship with Returns Policy
+The Copilot may explain the applicable refund rule but does not calculate or authorize the final refund amount.
 
-Return eligibility and refund eligibility represent different stages.
+## 4. Partial Returns and Partial Refunds
 
-The NordShop Returns Policy determines whether an item may be returned under the standard return rules.
+For partial returns permitted under the Returns Policy, the concrete treatment of the original Standard Delivery cost in an individual partial-return case, together with the final partial-refund calculation and approval, is handled by an authorized human employee.
 
-The Refund Policy determines whether the operational state of that return allows the standard refund process to proceed.
+The Copilot does not independently recalculate the original order's shipping charge or determine the final financial effect of a partial return.
 
-Being eligible to return an item does not mean that a refund:
+The Copilot may provide:
 
-- is already eligible for processing;
-- has been initiated;
-- has been completed.
+- the applicable refund rules;
+- verified order and item information;
+- verified return and refund status information.
 
-The standard process is:
+It must not determine the final partial-refund amount.
 
-Return eligibility  
-→ item returned by customer  
-→ return received by NordShop  
-→ NordShop refund processing  
-→ refund initiated  
-→ payment processing  
-→ NordShop refund operation completed
+## 5. When a Refund May Be Released
 
----
+NordShop follows the applicable statutory refund rule.
 
-## 4. Standard Refund Eligibility
+Physical receipt of the returned goods is not always required before repayment can be released.
 
-For a standard return-based refund, refund processing may proceed when:
+Where applicable, repayment may be released when NordShop has received either:
 
-1. the relevant order can be identified;
-2. the relevant item can be identified;
-3. the return is associated with an eligible standard return;
-4. NordShop has confirmed receipt of the returned item;
-5. the required operational information is available;
-6. no unresolved exception or discretionary decision is required.
+- the returned goods; or
+- acceptable proof of dispatch.
 
-If the returned item has not yet been confirmed as received, the system must not state that standard refund processing has started.
+If a case requires an individual assessment of whether the available evidence is sufficient, that assessment remains under human control.
 
-Actual refund execution remains a restricted human- or system-controlled business action.
+## 6. Repayment Period
 
----
+NordShop repays without undue delay and no later than 14 days after receiving the withdrawal declaration, subject to the applicable statutory right to withhold repayment until the returned goods or acceptable proof of dispatch have been received.
 
-## 5. Delivery-Related Refund Requests
+NordShop does not introduce separate fictional statutory deadlines for refund processing.
 
-A refund request based on a disputed delivery is not treated as a standard return-based refund.
+## 7. NordShop Refund Initiation Target
 
-If OMS reports the parcel as delivered but the customer reports that it was not received, the case must first be handled according to the NordShop Shipping Policy.
+Once a refund can be released under the applicable refund rules, NordShop targets initiation of the refund within:
 
-The system must not determine standard return-based refund eligibility solely from the OMS delivered status while receipt is disputed.
+**3 NordShop business days.**
 
-A refund, replacement, or compensation must not be promised as the automatic result of a delivered-but-not-received report.
+For this internal service target, NordShop business days are Monday through Friday.
 
----
+This is a NordShop internal service target.
 
-## 6. NordShop Refund Processing Target
+Where an applicable statutory repayment obligation requires earlier action, the statutory requirement takes precedence; the internal target must not extend it.
 
-After receipt of the returned item has been confirmed, NordShop's internal target is to initiate the applicable standard refund within:
+The internal target is not:
 
-**2 business days**
+- a statutory deadline;
+- a guarantee that the refunded amount will already be visible in the customer's bank account;
+- a replacement for the applicable statutory repayment rules.
 
-During this period, the return may be reviewed and the refund prepared for initiation.
+## 8. Refund Payment Method
 
-The system must not state that the refund has been initiated until this is confirmed by OMS.
+Refunds are made to the original payment method.
 
-If more than 2 business days have passed since confirmed return receipt and OMS still does not show the refund as initiated, and no approved information explains the delay, the case requires human review.
+A different payment method is not the standard NordShop MVP path and may be used only where it has been explicitly agreed and does not cause additional cost to the customer.
 
----
+The Copilot does not autonomously change the payment method.
 
-## 7. Payment Processing Estimate
+## 9. Bank and Payment-Provider Processing Time
 
-After OMS confirms that the refund has been initiated, the amount typically becomes visible on the customer's original payment method within:
+After NordShop has initiated a refund, the time until the refunded amount becomes visible to the customer may depend on the bank or payment provider.
 
-**3–5 business days**
+NordShop does not promise a fixed bank-processing or payment-provider-processing time.
 
-This period represents an expected payment-processing time after refund initiation.
+The Copilot may communicate the verified NordShop refund status but must not invent a date by which the money will become visible to the customer.
 
-The actual time may depend on the payment provider or financial institution.
+## 10. Value Reduction
 
-The system may communicate the standard estimate but must not guarantee an exact bank-account credit date unless an approved operational source provides one.
+A reduction in value may be legally relevant where the applicable statutory conditions are met.
 
-If more than 5 business days have passed since confirmed refund initiation and the customer reports that the funds are still not visible, and no approved information explains the delay, the case requires human review.
+The Copilot does not autonomously:
 
----
+- assess the physical condition of returned goods;
+- decide whether value reduction applies;
+- calculate a deduction;
+- determine the resulting refund amount.
 
-## 8. Business Day Definition
+These decisions remain under authorized human control.
 
-For the MVP, a business day is:
+## 11. Refund Rules for a Specific Case
 
-**Monday through Friday**
+A customer may ask how the refund rules apply to a specific purchase or return situation.
 
-Saturdays and Sundays are not counted as business days.
+In such cases, the Copilot may combine:
 
-Public holidays are not modeled separately.
+- the applicable approved Refund Policy information;
+- verified order information;
+- verified item information;
+- verified return information;
+- verified refund information.
 
-The same definition is used for:
+The Copilot provides rules and verified facts for employee assessment.
 
-- the 2-business-day NordShop refund initiation target;
-- the 3–5-business-day payment-processing estimate.
+It does not make the final individual legal, financial, or discretionary decision.
 
----
+## 12. Refund Amounts
 
-## 9. Refund Status
+The Copilot does not determine or authorize the final refund amount.
 
-OMS is the authoritative source for the current NordShop refund status.
+It may communicate verified factual order or item values when those values are available from an approved source and are relevant to the request.
 
-For the MVP, relevant states are:
+It must not present its own calculation as the final refund amount.
 
-- `NOT_INITIATED`;
-- `INITIATED`;
-- `COMPLETED`.
+## 13. Refund Status
 
-### NOT_INITIATED
+The current status of a specific refund is operational information.
 
-NordShop has not yet confirmed initiation of the refund.
+Refund status must be taken from the verified Order Management System (OMS).
 
-The system must not describe the refund as initiated or completed.
+The Copilot may communicate the verified refund status recorded in OMS and may provide relevant Refund Policy information where appropriate.
 
-### INITIATED
+Customer statements about refund progress do not overwrite or replace verified OMS information.
 
-NordShop has confirmed initiation of the refund.
+If customer-reported refund information materially conflicts with verified OMS information, the expected handling is defined in the frozen Global Scenarios and Acceptance Criteria.
 
-The standard 3–5-business-day payment-processing estimate may be communicated.
+## 14. Refund Actions
 
-### COMPLETED
+Refund-related business actions remain under authorized human control.
 
-`COMPLETED` means that NordShop has completed its refund operation.
+The Copilot does not autonomously:
 
-It does not prove that the refunded amount is already visible in the customer's bank account or payment account.
-
-The system must not state that the customer has already received the funds unless this is confirmed by an approved source.
-
----
-
-## 10. Customer Requests to Issue a Refund
-
-A customer may explicitly ask NordShop to issue, approve, or execute a refund.
-
-Actual refund execution is a restricted business action.
-
-The system may:
-
-- evaluate standard return-based refund eligibility;
-- explain the applicable Refund Policy;
-- communicate verified return and refund status;
-- explain the standard refund timeline.
-
-The system must not autonomously:
-
-- issue a refund;
 - approve a refund;
-- initiate a financial transaction.
+- initiate a refund;
+- issue or execute a refund;
+- modify a refund;
+- change a verified refund status;
+- change the refund payment method;
+- perform a financial transaction.
 
-A request requiring actual refund execution must remain with a human or authorized operational process.
+If a customer asks NordShop to perform such an action, the request is handled according to the applicable frozen Scenario and Acceptance Criteria.
 
----
+The Copilot must not claim that a refund-related action has been completed unless the authoritative process shows that it occurred.
 
-## 11. Refund Amount
+## 15. Relationship to Shipping and Returns
 
-The MVP does not calculate a refund amount independently.
+Shipping, returns, and refunds are related but separate business concepts.
 
-The system must not calculate, invent, estimate, or promise a refund amount unless the exact applicable amount is provided by an approved operational source.
+The Shipping Policy is the source of truth for:
 
-This avoids unsupported assumptions involving:
+- outbound Standard Delivery;
+- outbound shipping pricing;
+- the free-shipping threshold.
 
-- discounts;
-- coupons;
-- partial returns;
-- shipping costs;
-- fees;
-- partial refunds;
-- other order-specific adjustments.
+The Returns Policy is the source of truth for:
 
-If an exact refund amount is required but unavailable from an approved source, the case requires human handling.
+- the modeled withdrawal-right scope;
+- withdrawal declarations;
+- physical return rules;
+- the return procedure;
+- return shipping.
 
----
+This Refund Policy is the source of truth for:
 
-## 12. Refund Exceptions
+- repayment rules;
+- treatment of the original outbound Standard Delivery cost;
+- refund timing;
+- refund payment method;
+- refund-related financial boundaries.
 
-A refund case requires human review when:
+A completed physical return must not automatically be described as a completed refund unless verified refund information supports that statement.
 
-1. the request falls outside the standard return-based refund flow;
-2. the customer requests an exception to a return or refund rule;
-3. a discretionary compensation decision is required;
-4. the standard policy does not clearly resolve the case;
-5. required operational information is unavailable;
-6. the 2-business-day refund initiation target has been exceeded without sufficient explanation;
-7. the 5-business-day payment-processing estimate has been exceeded and the customer reports that funds are not visible.
+## 16. Customer-Reported and Verified Information
 
-The system must not grant, approve, or promise a discretionary refund or compensation.
+The Copilot must distinguish between:
 
----
+- information reported by the customer;
+- verified operational information from OMS.
 
-## 13. Missing Required Information
+Example:
 
-A reliable refund decision must not be made when information required to apply this policy is unavailable or unusable.
+```text
+Customer Request:
+"I still have not received my refund."
 
-Examples include:
+OMS:
+refund_status = COMPLETED
+```
 
-- the order cannot be identified;
-- the relevant item cannot be identified;
-- return receipt information is missing or unusable;
-- current refund status is unavailable when required;
-- refund initiation date is unavailable when required to evaluate processing time.
+The customer statement remains customer-reported information.
 
-If required information can reasonably be supplied or corrected by the customer, clarification should be requested.
+The OMS value remains the verified operational status.
 
-If required information is missing from an approved internal source, the case requires human handling.
+Neither should silently overwrite the other.
 
-Missing operational facts must not be invented, assumed, or inferred.
+The expected handling of a material conflict is defined in the frozen Global Scenarios and Acceptance Criteria.
 
----
+## 17. Missing Information
 
-## 14. Cross-Policy Precedence
+The Refund Policy must not be supplemented with invented business rules, deadlines, amounts, or outcomes.
 
-A downstream refund decision must not be made when it depends on an unresolved upstream operational condition.
+If a refund-related request requires approved policy information that is not available, the Copilot follows the handling defined in the frozen Scenarios and Acceptance Criteria.
 
-The standard order of decision-making is:
+If a specific refund request requires verified operational information, that information must come from OMS.
 
-Shipping condition  
-→ Return eligibility  
-→ Return completion / receipt  
-→ Refund eligibility  
-→ Refund processing
+Customer-provided information must not be treated as a substitute for unavailable verified OMS data.
 
-For example:
+## 18. Policy Boundaries
 
-A delivered-but-not-received dispute must first be resolved under the Shipping Policy.
+This policy defines:
 
-Only after the relevant upstream condition has been resolved may a standard return or return-based refund decision be made.
+- the standard NordShop refund scope;
+- the standard refund components;
+- partial-refund business boundaries;
+- the standard statutory repayment rule used by the MVP;
+- the NordShop internal refund-initiation target;
+- the refund payment method;
+- the distinction between NordShop processing time and bank/payment-provider processing time;
+- high-level boundaries for value reduction and refund amounts;
+- business constraints around refund-related actions.
 
----
+This policy does not define:
 
-## 15. Standard MVP Rules
+- OMS entities or field schemas;
+- customer-intent classification;
+- language handling;
+- routing logic;
+- `ANSWER`, `CLARIFY`, `ESCALATE`, or `OUT_OF_SCOPE` conditions;
+- technical architecture;
+- statutory deadline calculators;
+- legal-calendar engines;
+- automated legal interpretation;
+- detailed statutory exception logic.
 
-For the MVP:
+Those concerns are defined in the appropriate product, data, or technical documentation, or remain under human handling.
 
-- standard refunds are **return-based refunds governed by the Returns Policy**;
-- refund processing starts after the returned item is confirmed as received;
-- NordShop target from confirmed return receipt to refund initiation: **within 2 business days**;
-- expected payment-processing time after confirmed refund initiation: **3–5 business days**;
-- business days: **Monday through Friday**;
-- public holidays: **not modeled separately**;
-- `COMPLETED` means NordShop completed its refund operation, not necessarily that funds are already visible to the customer;
-- refund execution is a restricted business action;
-- exceptional refund decisions require human review;
-- OMS is the authoritative operational source.
+## 19. Related Documentation
+
+### Product
+
+- `docs/product/discovery.md`
+- `docs/product/use_cases.csv`
+- `docs/product/scenarios.csv`
+- `docs/product/acceptance_criteria.csv`
+
+### Data
+
+- `docs/data/oms_data_contract.md`
+
+### Knowledge Base
+
+- `data/knowledge_base/shipping_policy.md`
+- `data/knowledge_base/returns_policy.md`
+- `data/knowledge_base/refund_policy.md`
