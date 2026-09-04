@@ -71,20 +71,17 @@ Measure whether AI-generated suggestions are practically useful to support emplo
 
 The metric may be reported as acceptance rate, unchanged acceptance rate, edited acceptance rate, and rejection rate.
 
-### 6. AI Response Edit Level
+For the MVP, these three outcomes are sufficient for measuring AI suggestion utilization. The implementation does not need to persist the final edited customer response solely for this metric.
 
-Measures the extent to which support employees modify accepted AI-generated drafts.
+### 6. AI Response Edit Level — Optional post-MVP diagnostic
 
-Possible levels include:
+Detailed edit-level classification is not a required MVP metric.
 
-- no edit;
-- minor edit;
-- major edit;
-- complete rewrite.
+If introduced after the MVP pilot, it may distinguish levels such as minor edit, major edit, or complete rewrite. Such classification requires a separately defined and testable calculation rule before it is used for formal evaluation.
 
 **Purpose**
 
-Identify cases in which generated responses require substantial human correction.
+Provide an optional later diagnostic if the simpler AI Suggestion Utilization metric shows that deeper analysis of edited drafts is useful.
 
 ## 3. AI Quality & Safety
 
@@ -194,7 +191,7 @@ Examples include:
 
 Expected business outcomes such as `CLARIFY`, `ESCALATE`, or `OUT_OF_SCOPE` are not technical system errors when they are produced because the applicable business or product condition requires that outcome.
 
-A technical failure remains a technical error for this metric even if the product handles the failure safely, for example by returning or routing the case to `ESCALATE`.
+A technical failure remains a technical error for this metric even if the product handles the failure safely through the Technical Failure Path. Technical failures are measured separately from business Scenario and Action outcomes and do not themselves produce a business `ESCALATE` Action.
 
 Missing or insufficient business data without a technical malfunction is evaluated through the applicable product behavior and is not automatically counted as a technical system error.
 
@@ -204,19 +201,15 @@ Measure the technical reliability of the Copilot separately from expected busine
 
 ### 15. Cost per AI Request
 
-Average technical cost of processing one AI-assisted customer request.
+Average estimated technical cost of processing one AI-assisted customer request.
 
-Possible components include:
+For the MVP, it is sufficient to measure or derive an estimated total cost per AI-assisted request using the usage and pricing information available from the selected technical components. LLM input and output token usage may be recorded when required for this calculation.
 
-- LLM input tokens;
-- LLM output tokens;
-- embedding usage;
-- retrieval infrastructure;
-- application infrastructure.
+A mandatory per-request breakdown into embedding cost, retrieval-infrastructure cost, and application-infrastructure cost is not required for the MVP unless those components can be measured reliably without disproportionate implementation effort.
 
 **Purpose**
 
-Evaluate whether the solution remains economically viable as usage grows.
+Evaluate whether the solution remains economically viable as usage grows without requiring unnecessarily detailed cost attribution during the MVP.
 
 ## 5. Primary MVP Metrics
 

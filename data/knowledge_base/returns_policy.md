@@ -10,6 +10,12 @@ It covers the withdrawal right, withdrawal declarations, accepted channels, retu
 
 This policy applies to products covered by NordShop's standard withdrawal and return process.
 
+The standard NordShop MVP withdrawal and return flow applies to the products represented in the MVP.
+
+For the MVP, all modeled products are assumed to fall within the standard withdrawal-right flow.
+
+Product categories subject to special statutory withdrawal exceptions are not modeled in the MVP data.
+
 Special statutory withdrawal exceptions and cases requiring individual legal assessment are not defined in detail by this policy.
 
 Refund-specific repayment rules are defined in the Refund Policy.

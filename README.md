@@ -44,26 +44,36 @@ The frozen product definition contains:
 
 ```text
 data/
-└── knowledge_base/
-    ├── shipping_policy.md
-    ├── returns_policy.md
-    └── refund_policy.md
+├── knowledge_base/
+│   ├── shipping_policy.md
+│   ├── returns_policy.md
+│   └── refund_policy.md
+└── seed/
 
 docs/
 ├── data/
 │   └── oms_data_contract.md
 │
-└── product/
-    ├── acceptance_criteria.csv
-    ├── discovery.md
-    ├── scenarios.csv
-    ├── success_metrics.md
-    └── use_cases.csv
+├── product/
+│   ├── acceptance_criteria.csv
+│   ├── discovery.md
+│   ├── non_functional_requirements.md
+│   ├── scenarios.csv
+│   ├── success_metrics.md
+│   └── use_cases.csv
+│
+└── technical/
+    ├── diagrams/
+    │   ├── solution_architecture_flow.png
+    │   └── uc_sh_02_delivery_delay_decision_flow.png
+    ├── copilot_output_contract.md
+    └── solution_architecture.md
+
+scripts/
+└── validate_product_docs.py
 
 README.md
 ```
-
-Seed data and test artifacts are intentionally not included in the frozen documentation set yet. They will be created after the product, policy, and OMS definitions have been finalized.
 
 ## Product Documentation
 
@@ -97,6 +107,12 @@ Defines UC-specific scenarios and reusable global handling scenarios.
 
 Defines the testable expected behavior for the frozen scenario set.
 
+### Non-Functional Requirements
+
+[Non-Functional Requirements](docs/product/non_functional_requirements.md)
+
+Defines the frozen non-functional requirements for the MVP, including quality, safety, privacy, isolation, and operational constraints.
+
 ## Knowledge Base
 
 Approved business information used by the Copilot is stored in:
@@ -111,15 +127,54 @@ The Knowledge Base is the source of truth for detailed business rules used to gr
 
 The simplified Order Management System provides verified operational information for order-specific processing.
 
-Its structure, fields, relationships, status values, and data boundaries are defined in:
+Its structure, fields, relationships, status values, payload-validation rules, and data boundaries are defined in:
 
 [OMS Data Contract](docs/data/oms_data_contract.md)
 
 The OMS is the source of verified operational facts. It does not define business-policy rules or Copilot routing behavior.
 
+## Technical Design
+
+### Solution Architecture
+
+[Solution Architecture](docs/technical/solution_architecture.md)
+
+Defines the Phase 3.1 high-level solution architecture, including:
+
+- request analysis and supported Use Case assignment;
+- semantic fact extraction and customer-reference resolution;
+- deterministic source selection;
+- Approved Knowledge Base and OMS retrieval;
+- grounded processing;
+- Scenario and Action determination;
+- response generation, output assembly, and validation;
+- the human-in-the-loop boundary;
+- the cross-cutting Technical Failure Path.
+
+The architecture includes two supporting diagrams:
+
+- [Main Solution Architecture Flow](docs/technical/diagrams/solution_architecture_flow.png)
+- [UC-SH-02 Delivery-Delay Decision Flow](docs/technical/diagrams/uc_sh_02_delivery_delay_decision_flow.png)
+
+### Copilot Output Contract
+
+[Copilot Output Contract](docs/technical/copilot_output_contract.md)
+
+Defines the structured business result returned by the Copilot and the separate technical failure output.
+
+The business result contains:
+
+- `use_case_id`
+- `scenario_id`
+- `action`
+- `supporting_information`
+- `response_draft`
+
+Technical failures do not produce a business Scenario or Action. They return a separate `TechnicalFailureState`.
+
 ## Runtime Information Sources
 
-The MVP uses three primary runtime information sources:
+The MVP uses exactly three primary runtime information sources:
 
 1. Customer Request
 2. Approved Knowledge Base
@@ -127,16 +182,18 @@ The MVP uses three primary runtime information sources:
 
 Customer-reported information remains distinguishable from verified OMS information.
 
-## Supported AI Actions
+The current processing date may be used as application processing context where required by deterministic routing, but it is not an additional runtime information source.
 
-The Copilot uses four handling actions:
+## Supported Copilot Actions
+
+The Copilot uses four business handling actions:
 
 - `ANSWER`
 - `CLARIFY`
 - `ESCALATE`
 - `OUT_OF_SCOPE`
 
-The exact conditions for these actions are defined in the frozen Scenarios and Acceptance Criteria rather than duplicated in this README.
+The exact conditions for these actions are defined in the frozen Scenarios and Acceptance Criteria and implemented through the Solution Architecture rather than duplicated in this README.
 
 ## Human-in-the-Loop
 
@@ -146,20 +203,39 @@ A support employee reviews the Copilot result before any response is communicate
 
 Business actions requiring human handling remain under the responsibility of authorized NordShop employees.
 
+The Copilot does not autonomously perform delivery investigations, withdrawals, returns, refunds, approvals, financial actions, or customer communication.
+
 ## Development Status
 
-The following documentation layers are frozen for the current MVP:
+The following product and business-definition artifacts are frozen for the current MVP:
 
 - Product Discovery
 - Success Metrics
 - 13 Use Cases
 - 21 Scenarios
 - 57 Acceptance Criteria
+- Non-Functional Requirements
 - Shipping Policy
 - Returns Policy
 - Refund Policy
 - OMS Data Contract
 
-A full cross-document consistency review has been completed for the frozen documentation set.
+**Phase 3.1 — Solution Architecture: CLOSED / FROZEN**
 
-The next project stage is the creation of seed data, validation/test coverage, and implementation artifacts based on these frozen definitions.
+The completed Phase 3.1 baseline includes:
+
+- high-level hybrid AI/deterministic architecture;
+- end-to-end processing and decision flow;
+- source-routing model;
+- Scenario and Action decision model;
+- human-in-the-loop boundary;
+- Technical Failure Path;
+- Copilot business output contract;
+- separate technical failure output;
+- detailed deterministic routing for `UC-SH-02`.
+
+**Current stage: Phase 3.2 — Integration & Data Flow Design**
+
+Phase 3.2 defines the runtime data objects, their fields, provenance, creation points, and movement between processing stages while remaining consistent with the frozen Phase 3.1 architecture.
+
+Implementation, seed-data completion, validation, and test coverage follow the approved design baseline.

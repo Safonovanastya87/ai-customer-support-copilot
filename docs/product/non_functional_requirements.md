@@ -86,11 +86,17 @@ unless the authoritative operational process confirms that the action occurred.
 
 ## 4. Data Protection and Isolation
 
-### NFR-DATA-01 — Request isolation
+### NFR-DATA-01 — Customer personal data
+
+The Copilot may process customer personal data contained in the Customer Request or in the operational information required for supported request handling.
+
+Customer personal data must be processed only to the extent required for the supported request.
+
+### NFR-DATA-02 — Request isolation
 
 Information provided or retrieved for one processed customer request must not appear in the result of an unrelated request.
 
-### NFR-DATA-02 — Data minimization
+### NFR-DATA-03 — Data minimization
 
 Application logging, telemetry, and evaluation data must be limited to information required for:
 
@@ -101,7 +107,7 @@ Application logging, telemetry, and evaluation data must be limited to informati
 
 Customer content and operational information must not be duplicated unnecessarily across technical artifacts.
 
-### NFR-DATA-03 — Internal-use boundary
+### NFR-DATA-04 — Internal-use boundary
 
 The Copilot and the operational information processed by it are intended for authorized NordShop support workflows.
 

@@ -252,7 +252,9 @@ Examples of optional OMS information include:
 
 The absence of optional information does not make an OMS record invalid.
 
-Whether missing information is sufficient to answer a request or requires human handling is defined by the frozen Scenarios and Acceptance Criteria.
+An OMS response that violates required-field, enum, relationship, or data-integrity rules defined by this contract is an invalid OMS payload and must be treated by the application as a technical payload-validation failure. Such a response must not be treated as validly missing or insufficient business information.
+
+Whether validly missing information is sufficient to answer a request or requires human handling is defined by the frozen Scenarios and Acceptance Criteria.
 
 ## 10. OMS and Customer-Reported Information
 
