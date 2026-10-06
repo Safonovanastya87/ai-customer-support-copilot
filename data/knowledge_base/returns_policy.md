@@ -2,15 +2,15 @@
 
 ## 1. Purpose
 
-This policy defines NordShop's standard business rules for withdrawal and returns.
+This policy defines Anas Shop's standard business rules for withdrawal and returns.
 
 It covers the withdrawal right, withdrawal declarations, accepted channels, return periods, partial returns, return shipping, return labels, handover, packaging, proof of dispatch, and the standard return procedure.
 
 ## 2. Scope
 
-This policy applies to products covered by NordShop's standard withdrawal and return process.
+This policy applies to products covered by Anas Shop's standard withdrawal and return process.
 
-The standard NordShop MVP withdrawal and return flow applies to the products represented in the MVP.
+The standard Anas Shop MVP withdrawal and return flow applies to the products represented in the MVP.
 
 For the MVP, all modeled products are assumed to fall within the standard withdrawal-right flow.
 
@@ -22,7 +22,7 @@ Refund-specific repayment rules are defined in the Refund Policy.
 
 ## 3. Standard Withdrawal Right
 
-For products covered by the standard NordShop withdrawal process, the standard withdrawal period is:
+For products covered by the standard Anas Shop withdrawal process, the standard withdrawal period is:
 
 **14 days.**
 
@@ -42,9 +42,9 @@ Physical return of an item does not replace a withdrawal declaration where a dec
 
 ## 5. Withdrawal Channels
 
-For applicable online contracts, NordShop provides an online withdrawal function.
+For applicable online contracts, Anas Shop provides an online withdrawal function.
 
-A customer may also communicate an unequivocal withdrawal declaration through another communication channel accepted by NordShop.
+A customer may also communicate an unequivocal withdrawal declaration through another communication channel accepted by Anas Shop.
 
 A customer support message may itself contain an unequivocal withdrawal declaration.
 
@@ -60,13 +60,13 @@ Following a valid withdrawal declaration, the goods must be returned without und
 
 **14 days after the withdrawal declaration.**
 
-Withdrawal declaration, return dispatch, and physical receipt by NordShop are separate events.
+Withdrawal declaration, return dispatch, and physical receipt by Anas Shop are separate events.
 
 Timely dispatch within the applicable return period is sufficient for the standard return flow.
 
 ## 7. Partial Returns
 
-NordShop allows customers to return individual items from an order.
+Anas Shop allows customers to return individual items from an order.
 
 A partial return does not require all items in the order to be returned.
 
@@ -74,25 +74,25 @@ The financial consequences of a partial return, including treatment of the origi
 
 ## 8. Return Shipping Cost
 
-For the standard NordShop withdrawal flow, return shipping is free to the customer when the NordShop return method is used.
+For the standard Anas Shop withdrawal flow, return shipping is free to the customer when the Anas Shop return method is used.
 
-NordShop provides a prepaid return option.
+Anas Shop provides a prepaid return option.
 
-The customer does not pay the return-shipping cost when using this NordShop return method.
+The customer does not pay the return-shipping cost when using this Anas Shop return method.
 
-This is a NordShop company policy and not a general statutory rule applying to every online purchase in Germany.
+This is a Anas Shop company policy and not a general statutory rule applying to every online purchase in Germany.
 
 ## 9. Return Label and Digital Return Option
 
-NordShop provides the customer with a prepaid return label or an equivalent digital return option, such as a QR code.
+Anas Shop provides the customer with a prepaid return label or an equivalent digital return option, such as a QR code.
 
-The applicable carrier and available handover locations are provided in the NordShop return instructions associated with the return label or digital return option.
+The applicable carrier and available handover locations are provided in the Anas Shop return instructions associated with the return label or digital return option.
 
 This policy does not define one permanently fixed return carrier.
 
 The carrier used for the original outbound delivery does not determine the carrier used for the return.
 
-The applicable return carrier is the carrier specified in the NordShop return instructions.
+The applicable return carrier is the carrier specified in the Anas Shop return instructions.
 
 ## 10. Return Handover
 
@@ -102,7 +102,7 @@ The customer hands the return parcel over at:
 - a service point; or
 - another drop-off location
 
-specified in the NordShop return instructions.
+specified in the Anas Shop return instructions.
 
 Home pickup is not part of the standard return procedure defined by this policy.
 
@@ -112,13 +112,13 @@ The customer must package the goods securely for return transport.
 
 Original packaging is not required.
 
-No additional special packaging requirements apply under the standard return process unless NordShop provides specific return instructions.
+No additional special packaging requirements apply under the standard return process unless Anas Shop provides specific return instructions.
 
 ## 12. Documents Inside the Parcel
 
 No additional document is required inside the return parcel under the standard return process.
 
-The return is identified through the NordShop return label or digital return option and the associated return information.
+The return is identified through the Anas Shop return label or digital return option and the associated return information.
 
 The customer is not required to include a separate return form, invoice, or written withdrawal declaration inside the parcel.
 
@@ -132,22 +132,22 @@ Acceptable proof of dispatch may be relevant to subsequent refund processing und
 
 ## 14. Standard Return Procedure
 
-For a standard NordShop return:
+For a standard Anas Shop return:
 
-1. The customer submits an unequivocal withdrawal declaration through the NordShop online withdrawal function or another accepted communication channel.
-2. NordShop provides the customer with return instructions and a prepaid return label or equivalent digital return option.
+1. The customer submits an unequivocal withdrawal declaration through the Anas Shop online withdrawal function or another accepted communication channel.
+2. Anas Shop provides the customer with return instructions and a prepaid return label or equivalent digital return option.
 3. The customer packages the relevant item or items securely for return transport. Original packaging is not required.
 4. No additional document is required inside the parcel.
-5. The customer hands the parcel over at a parcel shop, service point, or another drop-off location specified in the NordShop return instructions.
+5. The customer hands the parcel over at a parcel shop, service point, or another drop-off location specified in the Anas Shop return instructions.
 6. The customer retains proof of dispatch until the return and refund process has been completed.
-7. NordShop processes the return.
+7. Anas Shop processes the return.
 8. Refund handling follows the separate Refund Policy.
 
 ## 15. Individual Assessment and Return Actions
 
-Cases requiring individual legal or discretionary assessment are handled through NordShop's authorized review process.
+Cases requiring individual legal or discretionary assessment are handled through Anas Shop's authorized review process.
 
-Registration, execution, modification, or approval of withdrawal- and return-related business actions is handled through NordShop's authorized return process.
+Registration, execution, modification, or approval of withdrawal- and return-related business actions is handled through Anas Shop's authorized return process.
 
 ## 16. Relationship to Refunds
 
@@ -171,7 +171,7 @@ The Refund Policy governs:
 - treatment of the original outbound Standard Delivery cost;
 - the repayment period;
 - when repayment may be released;
-- the NordShop refund-initiation target;
+- the Anas Shop refund-initiation target;
 - the refund payment method;
 - refund-specific financial rules.
 
@@ -187,7 +187,7 @@ This policy does not define:
 - special statutory withdrawal exceptions in detail;
 - individual legal assessments beyond the standard rules stated here.
 
-Those matters are governed by the Refund Policy, another applicable NordShop business process, or individual assessment.
+Those matters are governed by the Refund Policy, another applicable Anas Shop business process, or individual assessment.
 
 ## 18. Related Business Policies
 

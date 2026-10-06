@@ -1,400 +1,401 @@
-# OMS Data Contract
+# OMS Data Contract - MLP V14.6
 
 ## 1. Purpose
 
-The Order Management System (OMS) is the verified operational source used by the NordShop Customer Support Copilot for order-specific information.
+This document defines the **normalized OMS interface used by the MLP**.
 
-The MVP uses a simplified OMS data model that provides the operational information needed by the frozen Use Cases, Scenarios, Acceptance Criteria, and approved Knowledge Base policies for:
+It defines:
 
-- Order Status;
-- Shipping;
-- Returns;
-- Refunds.
+- the OMS business fields that may cross the OMS/MLP boundary;
+- field types and empty-value rules;
+- closed status values used by the current MLP;
+- date/time and monetary formats;
+- order/item integrity rules;
+- the authorization lookup boundary;
+- the distinction between a valid but incomplete business result (`INSUFFICIENT`) and a technically invalid OMS payload.
 
-The OMS stores verified operational data. It does not define product-routing behavior or business-policy rules.
+This contract does **not** define the full internal OMS schema. The real OMS may contain additional fields and statuses. Only the normalized subset defined here may be exposed to the Copilot path.
 
-Routing and handling decisions such as `ANSWER`, `CLARIFY`, `ESCALATE`, and `OUT_OF_SCOPE` are defined in:
+`use_cases.csv` remains the source of truth for which fields are **required, conditional, optional, or not permitted** for each Use Case. This contract defines how those fields are represented and validated.
 
-- `docs/product/scenarios.csv`;
-- `docs/product/acceptance_criteria.csv`.
+---
 
-Customer-reported information may provide context but does not overwrite verified OMS information.
+## 2. General Contract Rules
 
-## 2. Data Model Overview
+### 2.1 Normalized payload
 
-The simplified MVP OMS contains two primary entities:
+The OMS adapter must normalize the source response before it reaches the MLP.
 
-```text
-orders
-  |
-  └── order_items
-```
+The normalized payload:
 
-Order-level data represents:
+- contains only fields permitted by the current Use Case;
+- uses the types and values defined in this contract;
+- contains no customer/private OMS fields that are not permitted by the current Use Case;
+- must not contain raw OMS-specific structures that are outside this contract.
 
-- order identity;
-- current shipment state;
-- available delivery information;
-- the original outbound shipping charge actually paid;
-- the original payment method.
+Unknown or additional raw OMS fields must be removed by the adapter and must not be passed to the Copilot path.
 
-Item-level data represents:
+### 2.2 Missing values
 
-- purchased item identity;
-- the recorded item price;
-- current return state;
-- current refund state.
+The normalized MLP contract uses **field omission** to represent an unavailable value.
 
-The MVP models:
+Rules:
 
-- one shipment per order;
-- one original payment method per order;
-- at most one active modeled return process per order item;
-- at most one active modeled refund process per order item.
-
-These are MVP data-model simplifications and do not define broader NordShop business capabilities outside the frozen scope.
-
-All monetary fields in the MVP OMS are represented in EUR.
-
-## 3. Order Model
-
-### `orders`
-
-| Field | Type | Required | Description |
-|---|---|---:|---|
-| `order_id` | string | yes | Unique order identifier |
-| `shipment_status` | enum | yes | Current verified shipment state |
-| `estimated_delivery_date` | date | no | Current order-specific expected delivery date, if available |
-| `delivered_at` | datetime | conditional | Confirmed delivery date and time |
-| `tracking_number` | string | no | Shipment tracking identifier, if available |
-| `carrier` | string | no | Carrier recorded for the specific outbound shipment, if available |
-| `shipping_cost_paid` | decimal | yes | Original outbound Standard Delivery charge actually paid by the customer; may be `0.00` |
-| `payment_method` | string | yes | Verified original payment method used for the order |
-
-The OMS Data Contract does not reproduce the Shipping Policy pricing or free-shipping threshold. `shipping_cost_paid` stores the verified operational value actually recorded for the order.
-
-The OMS Data Contract does not define refund payment-method rules. `payment_method` stores the verified original payment method; the applicable refund rule is defined in the Refund Policy.
-
-### `shipment_status`
-
-Allowed values:
-
-- `PROCESSING`
-- `SHIPPED`
-- `DELIVERED`
-
-The shipment status is verified OMS information and may be used when answering order-status and shipping-related requests.
-
-For the MVP, `UC-OS-01` uses the verified `shipment_status` together with available delivery information as the current operational status of the order. Return and refund states are represented separately at item level and are not part of `UC-OS-01`. No separate `order_status` field is modeled.
-
-## 4. Shipment Information
-
-The MVP models one shipment per order.
-
-Shipment information is stored at order level.
-
-The OMS may provide:
-
-- current `shipment_status`;
-- `estimated_delivery_date`, when available;
-- `tracking_number`, when available;
-- `carrier`, when available;
-- confirmed `delivered_at`, when the shipment is recorded as delivered.
-
-### Delivery-state consistency
-
-If:
-
-```text
-shipment_status = DELIVERED
-```
-
-then:
-
-```text
-delivered_at
-```
-
-must be present.
-
-If:
-
-```text
-shipment_status = PROCESSING
-```
-
-or:
-
-```text
-shipment_status = SHIPPED
-```
-
-then `delivered_at` must be empty.
-
-A missing `tracking_number`, `estimated_delivery_date`, or `carrier` is allowed.
-
-Whether missing optional delivery information affects the final handling is defined by the frozen Scenarios and Acceptance Criteria rather than by this data contract.
-
-The current processing date used when applying date-based Shipping Policy rules is application runtime context and is not stored as an OMS field.
-
-The OMS Data Contract does not calculate or define the NordShop business-day calendar.
-
-## 5. Order Item Model
-
-### `order_items`
-
-| Field | Type | Required | Description |
-|---|---|---:|---|
-| `item_id` | string | yes | Unique order-item identifier |
-| `order_id` | string | yes | Foreign key to `orders.order_id` |
-| `product_name` | string | yes | Product name used for support context |
-| `item_price` | decimal | yes | Verified recorded price of the order item after applicable discounts |
-| `return_status` | enum | yes | Current verified return state |
-| `refund_status` | enum | yes | Current verified refund-processing state |
-
-Each order item belongs to exactly one order.
-
-The item-level model supports requests about:
-
-- return rules for a specific purchased item;
-- current return status;
-- refund rules for a specific case;
-- current refund status.
-
-`item_price` is a verified factual value. The OMS Data Contract does not define or calculate a final refund amount.
-
-## 6. Return Status Model
-
-### `return_status`
-
-Allowed values:
-
-- `NONE`
-- `DECLARED`
-- `DISPATCHED`
-- `RECEIVED`
-
-Descriptions:
-
-- `NONE` — no return process is currently represented for the item;
-- `DECLARED` — a return or withdrawal-related state has been registered in the operational process;
-- `DISPATCHED` — the returned item is recorded as dispatched back;
-- `RECEIVED` — NordShop records the returned item as received.
-
-`DECLARED` represents an OMS operational state. It does not mean that the Copilot itself registered or executed a withdrawal declaration.
-
-The OMS return state is treated as verified operational information.
-
-A customer statement about a return does not change `return_status`.
-
-If customer-reported return information materially conflicts with the verified OMS state, handling is defined by the frozen Global Scenarios and Acceptance Criteria.
-
-### Proof of dispatch boundary
-
-The MVP OMS does not model a separate proof-of-dispatch document or evidentiary assessment field.
-
-`return_status = DISPATCHED` means only that the operational return state is recorded as dispatched.
-
-Whether a particular proof of dispatch is acceptable for refund-release purposes is a human-controlled assessment under the Refund Policy and must not be inferred solely from the enum value.
-
-## 7. Refund Status Model
-
-### `refund_status`
-
-Allowed values:
-
-- `NOT_INITIATED`
-- `INITIATED`
-- `COMPLETED`
-
-Descriptions:
-
-- `NOT_INITIATED` — no refund process is currently recorded as initiated;
-- `INITIATED` — the refund process is recorded as initiated;
-- `COMPLETED` — NordShop records the refund process as completed.
-
-The OMS refund state is treated as verified operational information.
-
-`COMPLETED` describes the OMS operational state only. It does not guarantee that the refunded amount is already visible in the customer's bank or payment-provider account.
-
-Customer-reported information remains separate from the OMS state.
-
-If customer-reported refund information materially conflicts with the verified OMS state, handling is defined by the frozen Global Scenarios and Acceptance Criteria.
-
-## 8. Record Identification
-
-Order- and item-specific processing requires identification of the relevant OMS record.
-
-Supported identifiers include:
-
-- `order_id`;
-- `item_id`, where item-level information is required.
-
-Because return and refund state are modeled at item level, `item_id` is required when a specific item-level return or refund cannot be identified unambiguously from the available request context.
-
-If a required customer-provided reference is missing, ambiguous, or cannot be matched, the handling behavior is defined in the frozen Global Scenarios and Acceptance Criteria.
-
-The data contract itself defines only the available OMS identifiers and relationships.
-
-## 9. Missing and Optional Data
-
-The OMS must not be supplemented with invented operational values.
-
-Required fields must be present according to this contract.
-
-Optional fields may be absent.
-
-Examples of optional OMS information include:
-
-- `tracking_number`;
-- `estimated_delivery_date`;
-- `carrier`.
-
-The absence of optional information does not make an OMS record invalid.
-
-An OMS response that violates required-field, enum, relationship, or data-integrity rules defined by this contract is an invalid OMS payload and must be treated by the application as a technical payload-validation failure. Such a response must not be treated as validly missing or insufficient business information.
-
-Whether validly missing information is sufficient to answer a request or requires human handling is defined by the frozen Scenarios and Acceptance Criteria.
-
-## 10. OMS and Customer-Reported Information
-
-The MVP keeps customer-reported information and verified OMS information separate.
+- JSON `null` is not used for business fields in the normalized payload;
+- an optional field with no value is omitted;
+- a currently required or activated conditional field with no value is omitted and causes the OMS Result to be `INSUFFICIENT`;
+- empty strings and whitespace-only strings are not valid substitutes for missing values.
 
 Example:
 
-```text
-Customer Request:
-"My parcel has not arrived."
-
-OMS:
-shipment_status = DELIVERED
+```json
+{
+  "order_id": "12345",
+  "shipment_status": "SHIPPED"
+}
 ```
 
-The customer statement remains customer-reported information.
+If `estimated_delivery_date` is currently required for this Use Case and is absent, the payload is structurally valid but the OMS Result is `INSUFFICIENT`.
 
-The OMS state remains verified operational information.
+### 2.3 Identifiers are opaque strings
 
-The Copilot must not silently overwrite one with the other.
+`order_id` and `item_id` are strings, not numbers.
 
-The expected handling of such a conflict is defined in the frozen product Scenarios and Acceptance Criteria.
+They:
 
-The same separation applies to:
+- must be non-empty after trimming;
+- must not be converted numerically;
+- may contain leading zeroes;
+- are compared as exact normalized strings.
 
-- order and shipment information;
-- delivery information;
-- return information;
-- refund information.
+---
 
-## 11. Data Integrity Rules
+## 3. Authorization Lookup Contract
 
-The following structural relationship applies:
+Authorization is performed before OMS business retrieval as defined in Level 3.
 
-```text
-orders.order_id
-    ↓
-order_items.order_id
-```
-
-Each `order_items.order_id` must reference an existing `orders.order_id`.
-
-The following shipment-status consistency rules apply:
+### Input
 
 ```text
-shipment_status = DELIVERED
-    → delivered_at is present
+verified_sender_email
+order_id
 ```
+
+### Result
+
+Exactly one business result:
 
 ```text
-shipment_status = PROCESSING or SHIPPED
-    → delivered_at is empty
+MATCH
+NO_MATCH
 ```
 
-Monetary fields must not contain negative values:
+Rules:
 
-- `shipping_cost_paid >= 0`;
-- `item_price >= 0`.
+- authorization lookup returns no order/business payload;
+- `MATCH` allows Level 3 to set `authorization = PASSED` for that exact `order_id`;
+- `NO_MATCH` is a normal authorization outcome, not a technical error;
+- timeout, transport failure, malformed response, or inability to execute the lookup is Technical Error Handling.
 
-No shipping-price threshold, refund formula, legal, statutory, or routing rule is defined by the OMS Data Contract.
+The data-retrieval operation may run only after `authorization = PASSED` for the same `order_id`.
 
-## 12. Policy-to-Data Coverage
+---
 
-The OMS contains only the verified operational values needed for order-specific processing within the frozen MVP.
+## 4. Normalized Order Payload
 
-### Shipping
+The normalized business payload has this logical shape. Fields are included only when permitted by the current Use Case.
 
-Supported operational facts include:
+```json
+{
+  "order_id": "12345",
+  "shipment_status": "SHIPPED",
+  "estimated_delivery_date": "2026-10-08",
+  "delivered_at": "2026-10-08T14:35:00+02:00",
+  "tracking_number": "TRACK-123",
+  "carrier": "Example Carrier",
+  "shipping_cost_paid": 4.99,
+  "payment_method": "PAYPAL",
+  "order_items": [
+    {
+      "item_id": "0001",
+      "product_name": "Pyjama",
+      "item_price": 39.99,
+      "return_status": "NOT_STARTED",
+      "refund_status": "NOT_STARTED"
+    }
+  ]
+}
+```
 
-- shipment status;
-- order-specific estimated delivery date;
-- confirmed delivery timestamp;
-- tracking number when available;
-- outbound carrier when available.
+The example shows the complete logical field set. A real Use Case receives only its permitted projection.
 
-General shipping prices, delivery area, carrier-selection rules, and the standard delivery target remain in the Shipping Policy. The optional `carrier` field represents only the verified carrier recorded for a specific outbound shipment; it does not provide carrier-side tracking events or investigation data.
+---
 
-### Returns
+## 5. Field Definitions
 
-Supported operational facts include:
+| Field | Type | Empty / missing rule | Notes |
+|---|---|---|---|
+| `order_id` | string | no empty/null | Exact authorized order reference. Required whenever OMS business data is retrieved. |
+| `shipment_status` | enum string | no empty/null when present | Closed MLP enum defined below. |
+| `estimated_delivery_date` | date string | omitted when unavailable | Format `YYYY-MM-DD`. Interpreted as local calendar date for the MLP; Level 5 compares it with `current_local_date` in `Europe/Berlin`. |
+| `delivered_at` | date-time string | omitted when unavailable | RFC 3339 / ISO 8601 date-time with `Z` or explicit UTC offset. |
+| `tracking_number` | string | omitted when unavailable; no empty string | Tracking reference only. |
+| `carrier` | string | omitted when unavailable; no empty string | Carrier display/name value only. |
+| `shipping_cost_paid` | decimal number | omitted when unavailable | EUR, value `>= 0`, maximum two decimal places. |
+| `payment_method` | string | omitted when unavailable; no empty string | Coarse payment-method name only. Must not contain card/account numbers, secrets, tokens, or authentication data. |
+| `order_items` | array of objects | omitted when no item-level fields are permitted/available | When item-level required fields are active, absence or an empty collection produces `INSUFFICIENT`. |
+| `order_items[].item_id` | string | required for every returned item record; no empty/null | Structural identifier for an included OMS item record. Unique within one order payload. Not required from the customer. A returned item record without a valid `item_id` is a contract/data-integrity violation. |
+| `order_items[].product_name` | string | if required and unavailable, omit -> `INSUFFICIENT`; if optional and unavailable, omit; if present, no empty/null | Non-empty product display name. Missing required `product_name` is incomplete business data, not a structural item-record failure. |
+| `order_items[].item_price` | decimal number | omitted when unavailable | EUR, value `>= 0`, maximum two decimal places. |
+| `order_items[].return_status` | enum string | omitted where optional; no empty/null when present | Closed MLP enum defined below. |
+| `order_items[].refund_status` | enum string | omitted where optional; no empty/null when present | Closed MLP enum defined below. |
 
-- purchased-item identity;
-- item context;
-- current return status.
+---
 
-The return procedure, prepaid label / QR option, return-carrier instructions, packaging rules, and proof-of-dispatch guidance remain in the Returns Policy or the applicable human operational process. They are not modeled as OMS fields for the frozen MVP.
+## 6. Closed Status Enums
 
-### Refunds
+Enum values are uppercase and case-sensitive.
 
-Supported operational facts include:
+### 6.1 `shipment_status`
 
-- item price;
-- original outbound shipping cost actually paid;
-- original payment method;
-- current return status;
-- current refund status.
+Allowed values:
 
-Final refund calculations, value-reduction decisions, evidence sufficiency, authorization, and payment execution remain outside the OMS Data Contract.
+```text
+PROCESSING
+SHIPPED
+DELIVERED
+```
 
-The MVP OMS does not model the dates needed to calculate or determine individual statutory refund-deadline compliance, such as a withdrawal-declaration date or separate return/refund processing timestamps. If such verified dates are required for an individual case and are unavailable, the applicable missing-information handling is defined by the frozen Scenarios and Acceptance Criteria. Final legal assessment remains under human control.
+Meaning in the MLP:
 
-## 13. Data Contract Boundaries
+- `PROCESSING` - order/shipment is being prepared and is not recorded as shipped or delivered;
+- `SHIPPED` - shipment has been handed over for delivery / is in transit and is not recorded as delivered;
+- `DELIVERED` - OMS records the shipment as delivered.
 
-The OMS Data Contract defines:
+The current MLP deliberately models no additional shipment states.
 
-- operational entities;
-- operational fields;
-- field types;
-- required and optional data;
-- allowed status values;
-- structural consistency rules.
+`CANCELLED`, `RETURNED`, `FAILED`, or any other raw OMS value is **outside the current MLP contract**. Such a value must not be silently mapped to one of the three allowed states. If an unsupported value reaches a required normalized field, it is a contract-validation failure handled through Technical Error Handling.
 
-The OMS Data Contract does not define:
+### 6.2 `return_status`
 
-- customer intent classification;
-- language handling;
-- business scope;
-- `ANSWER`, `CLARIFY`, `ESCALATE`, or `OUT_OF_SCOPE` decisions;
-- policy rules;
-- legal interpretation;
-- statutory deadline calculation;
-- human authorization rules;
-- response-generation behavior;
-- final refund calculations;
-- return-label or QR-code generation;
-- carrier-side tracking events or investigations.
+Allowed values:
 
-Those concerns are defined in the appropriate product, knowledge-base, application, or human operational process.
+```text
+NOT_STARTED
+INITIATED
+DISPATCHED
+RECEIVED
+COMPLETED
+CANCELLED
+```
 
-## 14. Related Documentation
+Meaning:
 
-### Product
+- `NOT_STARTED` - no return process is currently recorded for the item;
+- `INITIATED` - a return has been created/registered but is not recorded as dispatched;
+- `DISPATCHED` - the return is recorded as handed over/sent back;
+- `RECEIVED` - the returned item is recorded as received by Anas Shop;
+- `COMPLETED` - the return process is recorded as completed;
+- `CANCELLED` - a previously recorded return process is recorded as cancelled.
 
-- [Product Discovery](../product/discovery.md)
-- [Use Cases](../product/use_cases.csv)
-- [Scenarios](../product/scenarios.csv)
-- [Acceptance Criteria](../product/acceptance_criteria.csv)
+### 6.3 `refund_status`
 
-### Knowledge Base
+Allowed values:
 
-- `data/knowledge_base/shipping_policy.md`
-- `data/knowledge_base/returns_policy.md`
-- `data/knowledge_base/refund_policy.md`
+```text
+NOT_STARTED
+PENDING
+PROCESSING
+COMPLETED
+FAILED
+CANCELLED
+```
+
+Meaning:
+
+- `NOT_STARTED` - no refund process is currently recorded for the item;
+- `PENDING` - refund is recorded as waiting for a required processing/release step;
+- `PROCESSING` - refund execution is recorded as in progress;
+- `COMPLETED` - OMS records the refund as completed;
+- `FAILED` - OMS records the refund attempt/process as failed;
+- `CANCELLED` - a previously recorded refund process is recorded as cancelled.
+
+`NOT_STARTED` is used instead of an empty string or `null` when OMS explicitly knows that no return/refund process has started for the item.
+
+---
+
+## 7. Order and Item Integrity Rules
+
+### 7.1 Order correlation
+
+For an OMS retrieval executed for authorized `order_id = X`:
+
+```text
+response.order_id must equal X
+```
+
+A different `order_id` is a contract/data-integrity violation and must use Technical Error Handling. The mismatching payload must not be treated as customer data for the current Request.
+
+### 7.2 Item collection
+
+When `order_items` is returned:
+
+- every item belongs to the root `order_id`;
+- `item_id` values must be unique within the response;
+- item order in the array has no business meaning;
+- the adapter must not duplicate an item;
+- where the Use Case requires item-level fields, the adapter returns the complete item collection for the authorized order, projected to the permitted fields.
+
+Multiple items are valid and do not by themselves make the result `INSUFFICIENT`.
+
+### 7.3 Included item records
+
+Whenever an `order_items` collection is included, each included record must contain a valid `item_id` so Support can distinguish the records. `item_id` is a structural identity requirement for an included item record, not an ordinary missing business-field case. An included item record without a valid `item_id` is a contract/data-integrity violation and uses Technical Error Handling.
+
+By contrast, business fields such as `product_name`, `item_price`, `return_status`, or `refund_status` follow their per-Use-Case requiredness in `docs/product/use_cases.csv`: if a required business field is unavailable it is omitted and the OMS Result becomes `INSUFFICIENT`; if it is optional it may be omitted without making the required path insufficient.
+
+If all item-level business fields are optional for the current Use Case, the entire `order_items` collection may be omitted without making the required OMS path insufficient.
+
+---
+
+## 8. Conditional Field Rule
+
+The current MLP has one OMS conditional rule:
+
+```text
+UC-SH-02:
+estimated_delivery_date required if shipment_status in {PROCESSING, SHIPPED}
+```
+
+Therefore:
+
+- `PROCESSING` + valid ETA -> required OMS data can be `SUFFICIENT`;
+- `SHIPPED` + valid ETA -> required OMS data can be `SUFFICIENT`;
+- `PROCESSING` or `SHIPPED` + ETA omitted -> `INSUFFICIENT`;
+- `DELIVERED` -> ETA is not required.
+
+A present ETA with invalid format is a payload-validation failure rather than normal `INSUFFICIENT`.
+
+---
+
+## 9. `SUFFICIENT` vs `INSUFFICIENT` vs Technical Error
+
+### 9.1 `SUFFICIENT`
+
+The normalized payload is valid and every field/collection currently required by `use_cases.csv`, including activated conditional fields, is available.
+
+Optional fields may be absent.
+
+### 9.2 `INSUFFICIENT`
+
+The OMS operation completed normally and the normalized payload is structurally valid, but required business information is validly unavailable/incomplete.
+
+Examples:
+
+- required field is omitted;
+- activated conditional ETA is omitted;
+- required `order_items` collection is absent or empty;
+- one or more required item-level **business fields** (for example required `product_name`) are omitted from an otherwise valid item record;
+- OMS explicitly returns no business record after a successful authorized lookup in a valid no-data result.
+
+`INSUFFICIENT` is a normal business retrieval result and proceeds through the global insufficient scenario.
+
+### 9.3 Technical Error / contract violation
+
+Use Technical Error Handling when required OMS processing cannot produce a valid normalized payload.
+
+Examples:
+
+- timeout, connection error, non-success technical response;
+- malformed JSON / non-parseable payload;
+- wrong JSON type;
+- required string returned as `""` or whitespace only;
+- JSON `null` in a returned business field;
+- invalid date/date-time format;
+- negative or invalid monetary value;
+- unknown value in a **required** closed enum;
+- `shipment_status = CANCELLED` in a required normalized field;
+- returned `order_id` differs from the authorized/requested `order_id`;
+- duplicate `item_id` values;
+- an included `order_items` record has a missing, empty, null, or otherwise invalid `item_id`;
+- non-array `order_items`;
+- normalized payload contains prohibited/unpermitted private fields because projection/data minimization failed.
+
+### 9.4 Invalid optional enrichment
+
+If a validation problem is isolated to an **optional** field and the required path remains fully valid:
+
+- omit the invalid optional field;
+- record optional-source issue metadata;
+- continue the normal required path;
+- do not trigger Technical Escalation solely because of that optional enrichment.
+
+Example:
+
+For `UC-RF-02`, `refund_status` is optional. If a raw unsupported refund status cannot be normalized, that optional field may be omitted and logged while the required order/item data remains usable.
+
+For `UC-RF-03`, `refund_status` is required. The same unsupported value is therefore a required payload-validation failure and uses Technical Error Handling.
+
+---
+
+## 10. Data Minimization and Security Boundary
+
+The MLP must not receive OMS data beyond the current Use Case permission set.
+
+In particular, this contract does not permit retrieval of customer profile data such as:
+
+- customer name unless separately introduced by an approved contract change;
+- postal address;
+- full payment instrument details;
+- bank/card account numbers;
+- authentication data;
+- internal notes unrelated to the current Use Case;
+- unrelated orders.
+
+The adapter is responsible for projection before the business payload reaches the Copilot path.
+
+Authorization results and OMS business data are separate operations. A `NO_MATCH` authorization result never returns private order data.
+
+---
+
+## 11. Current MLP Use-Case Relationship
+
+The following Use Cases currently use OMS:
+
+```text
+UC-OS-01
+UC-SH-02
+UC-SH-03
+UC-RT-02
+UC-RT-03
+UC-RT-04
+UC-RF-02
+UC-RF-03
+UC-RF-04
+```
+
+Field requiredness and permission are defined in `docs/product/use_cases.csv`.
+
+Knowledge-only Use Cases do not call OMS:
+
+```text
+UC-SH-01
+UC-RT-01
+UC-RF-01
+```
+
+---
+
+## 12. Change Rule
+
+A new OMS field, status value, relationship rule, or data type is not automatically available to the MLP.
+
+Changing this contract requires checking at least:
+
+- `product/use_cases.csv` field permissions and requiredness;
+- `product/scenarios.csv` scenario completeness/mutual exclusivity where the new value can affect scenario matching;
+- Level 4 retrieval/validation behavior;
+- Technical Error Handling boundary;
+- applicable Policy scope where business rules depend on the new data.
+
+No raw OMS value may be silently coerced merely to make an existing scenario match.
