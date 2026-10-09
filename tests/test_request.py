@@ -1,19 +1,26 @@
 from src.models.request import Request
 from src.models.request_state import RequestState
 from src.models.clarification import ClarificationRecord
+from src.models.channel import Channel
+
+def create_request() -> Request:
+    return Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
 
 
 def test_request_has_unique_id_and_default_state():
-    request_1 = Request()
-    request_2 = Request()
+    request_1 = create_request()
+    request_2 = create_request()
 
     assert request_1.request_id != request_2.request_id
     assert request_1.state == RequestState.PROCESSING
 
 
 def test_request_lists_are_independent():
-    request_1 = Request()
-    request_2 = Request()
+    request_1 = create_request()
+    request_2 = create_request()
 
     request_1.message_refs.append("msg-001")
 
@@ -21,7 +28,7 @@ def test_request_lists_are_independent():
     assert request_2.message_refs == []
 
 def test_message_ref_is_not_duplicated():
-    request = Request()
+    request = create_request()
 
     request.add_message_ref("msg-001")
     request.add_message_ref("msg-001")
@@ -30,7 +37,7 @@ def test_message_ref_is_not_duplicated():
 
 
 def test_accepted_business_message_ref_is_not_duplicated():
-    request = Request()
+    request = create_request()
 
     request.add_accepted_business_message_ref("msg-001")
     request.add_accepted_business_message_ref("msg-001")
@@ -39,7 +46,7 @@ def test_accepted_business_message_ref_is_not_duplicated():
 
 
 def test_attachment_ref_is_not_duplicated():
-    request = Request()
+    request = create_request()
 
     request.add_attachment_ref("att-001")
     request.add_attachment_ref("att-001")
@@ -47,7 +54,7 @@ def test_attachment_ref_is_not_duplicated():
     assert request.attachment_refs == ["att-001"]
 
 def test_use_case_can_be_set():
-    request = Request()
+    request = create_request()
 
     request.set_use_case("UC-SH-02")
 
@@ -56,7 +63,7 @@ def test_use_case_can_be_set():
 
 
 def test_previous_use_case_is_saved_in_history():
-    request = Request()
+    request = create_request()
 
     request.set_use_case("UC-SH-02")
     request.set_use_case("UC-RT-03")
@@ -66,7 +73,7 @@ def test_previous_use_case_is_saved_in_history():
 
 
 def test_same_use_case_is_not_added_to_history():
-    request = Request()
+    request = create_request()
 
     request.set_use_case("UC-SH-02")
     request.set_use_case("UC-SH-02")
@@ -75,7 +82,7 @@ def test_same_use_case_is_not_added_to_history():
     assert request.use_case_history == []
 
 def test_active_clarification_is_stored_in_history():
-    request = Request()
+    request = create_request()
 
     clarification = ClarificationRecord(
         decision_reason="REQUIRED_INPUT_INSUFFICIENT",
@@ -90,7 +97,7 @@ def test_active_clarification_is_stored_in_history():
 
 
 def test_active_clarification_can_be_resolved_without_losing_history():
-    request = Request()
+    request = create_request()
 
     clarification = ClarificationRecord(
         decision_reason="REQUIRED_INPUT_INSUFFICIENT",

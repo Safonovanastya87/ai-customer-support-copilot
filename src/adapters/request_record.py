@@ -10,6 +10,9 @@ class RequestRecord(Base):
 
     request_id: Mapped[str] = mapped_column(String, primary_key=True)
     state: Mapped[str] = mapped_column(String, nullable=False)
+    
+    request_channel: Mapped[str] = mapped_column(String, nullable=False)
+    config_release_id: Mapped[str] = mapped_column(String, nullable=False)
 
     message_refs: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     accepted_business_message_refs: Mapped[list[str]] = mapped_column(JSONB, nullable=False)

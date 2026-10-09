@@ -7,13 +7,19 @@ from src.adapters.request_storage import PostgresRequestStorage
 from src.models.clarification import ClarificationRecord
 from src.models.request import Request
 from src.models.request_state import RequestState
+from src.models.channel import Channel
 
+def create_request() -> Request:
+    return Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
 
 def test_request_can_be_saved_and_loaded_from_postgres():
     engine = create_database_engine()
     storage = PostgresRequestStorage(engine)
 
-    request = Request()
+    request = create_request()
     request.add_message_ref("msg-001")
     request.set_use_case("UC-SH-02")
 
@@ -43,7 +49,7 @@ def test_existing_request_can_be_updated_in_postgres():
     engine = create_database_engine()
     storage = PostgresRequestStorage(engine)
 
-    request = Request()
+    request = create_request()
 
     try:
         storage.save(request)
@@ -75,7 +81,7 @@ def test_request_context_is_preserved_in_postgres():
     engine = create_database_engine()
     storage = PostgresRequestStorage(engine)
 
-    request = Request()
+    request = create_request()
     request.state = RequestState.AWAITING_CUSTOMER
 
     request.add_message_ref("msg-001")
@@ -103,6 +109,9 @@ def test_request_context_is_preserved_in_postgres():
         loaded_request = storage.get(request.request_id)
 
         assert loaded_request is not None
+
+        assert loaded_request.request_channel == Channel.EMAIL
+        assert loaded_request.config_release_id == "config-v1"
 
         assert loaded_request.state == RequestState.AWAITING_CUSTOMER
 

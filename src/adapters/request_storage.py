@@ -7,6 +7,7 @@ from src.adapters.request_record import RequestRecord
 from src.models.clarification import ClarificationRecord
 from src.models.request import Request
 from src.models.request_state import RequestState
+from src.models.channel import Channel
 
 
 class RequestStorage(Protocol):
@@ -25,6 +26,8 @@ class PostgresRequestStorage:
         record = RequestRecord(
             request_id=request.request_id,
             state=request.state.value,
+            request_channel=request.request_channel.value,
+            config_release_id=request.config_release_id,        
             message_refs=request.message_refs,
             accepted_business_message_refs=request.accepted_business_message_refs,
             attachment_refs=request.attachment_refs,
@@ -53,7 +56,10 @@ class PostgresRequestStorage:
             if record is None:
                 return None
 
+           
             return Request(
+                request_channel=Channel(record.request_channel),
+                config_release_id=record.config_release_id,
                 request_id=record.request_id,
                 state=RequestState(record.state),
                 message_refs=record.message_refs,

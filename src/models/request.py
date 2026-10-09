@@ -3,11 +3,15 @@ from uuid import uuid4
 
 from src.models.clarification import ClarificationRecord
 from src.models.request_state import RequestState
+from src.models.channel import Channel
 
 
 
 @dataclass
 class Request:
+    request_channel: Channel
+    config_release_id: str
+
     request_id: str = field(default_factory=lambda: str(uuid4()))
     state: RequestState = RequestState.PROCESSING
 
