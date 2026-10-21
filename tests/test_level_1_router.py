@@ -5,6 +5,7 @@ from src.models.inbound_message import InboundMessage
 from src.models.message_type import MessageType
 from src.models.request import Request
 from src.models.request_state import RequestState
+from src.models.clarification import ClarificationRecord
 
 
 class UnunderstandableBasicMessageCheck:
@@ -50,6 +51,13 @@ class UninterpretableContextInterpreter:
 class InterpretableContextInterpreter:
     def is_interpretable(self, message, request):
         return True
+
+class FixedContinuationChecker:
+    def __init__(self, is_same_logical_case: bool) -> None:
+        self._is_same_logical_case = is_same_logical_case
+
+    def is_same_logical_case(self, message, request):
+        return self._is_same_logical_case
 
 
 def create_router() -> Level1Router:
@@ -302,4 +310,182 @@ def test_communication_only_for_awaiting_request_keeps_awaiting_customer():
 
     assert request.state == RequestState.AWAITING_CUSTOMER
     assert request.message_refs == ["msg-007"]
+    assert request.accepted_business_message_refs == []
+
+def test_actionable_continuation_for_awaiting_request_routes_to_level_2():
+    router = Level1Router(
+        basic_message_check=UnunderstandableBasicMessageCheck(),
+        message_classifier=FixedMessageClassifier(
+            MessageType.ACTIONABLE_CONTEXTUAL
+        ),
+        context_interpreter=InterpretableContextInterpreter(),
+        continuation_checker=FixedContinuationChecker(True),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.AWAITING_CUSTOMER
+
+    message = InboundMessage(
+        message_ref="msg-008",
+        text="My order number is 12345.",
+        channel=Channel.EMAIL,
+        attachment_refs=("att-008",),
+    )
+
+    result = router.process(
+        message=message,
+        request=request,
+        config_release_id="config-v1",
+    )
+
+    assert result.route == Level1Route.LEVEL_2
+    assert result.request is request
+
+    assert request.state == RequestState.PROCESSING
+    assert request.message_refs == ["msg-008"]
+    assert request.accepted_business_message_refs == ["msg-008"]
+    assert request.attachment_refs == ["att-008"]
+
+def test_new_independent_issue_for_awaiting_request_routes_to_level_6():
+    router = Level1Router(
+        basic_message_check=UnunderstandableBasicMessageCheck(),
+        message_classifier=FixedMessageClassifier(
+            MessageType.ACTIONABLE_CONTEXTUAL
+        ),
+        context_interpreter=InterpretableContextInterpreter(),
+        continuation_checker=FixedContinuationChecker(False),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.AWAITING_CUSTOMER
+
+    request.add_message_ref("msg-old")
+    request.add_accepted_business_message_ref("msg-old")
+
+    message = InboundMessage(
+        message_ref="msg-009",
+        text="I also want to return another order.",
+        channel=Channel.EMAIL,
+        attachment_refs=("att-009",),
+    )
+
+    result = router.process(
+        message=message,
+        request=request,
+        config_release_id="config-v1",
+    )
+
+    assert result.route == Level1Route.LEVEL_6
+    assert result.request is request
+    assert result.decision_reason == "MULTIPLE_ISSUES"
+
+    assert request.state == RequestState.PROCESSING
+
+    assert request.message_refs == [
+        "msg-old",
+        "msg-009",
+    ]
+
+    assert request.accepted_business_message_refs == [
+        "msg-old",
+    ]
+
+    assert request.attachment_refs == [
+        "att-009",
+    ]
+
+def test_same_case_continuation_resolves_active_clarification_and_keeps_history():
+    router = Level1Router(
+        basic_message_check=UnunderstandableBasicMessageCheck(),
+        message_classifier=FixedMessageClassifier(
+            MessageType.ACTIONABLE_CONTEXTUAL
+        ),
+        context_interpreter=InterpretableContextInterpreter(),
+        continuation_checker=FixedContinuationChecker(True),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.AWAITING_CUSTOMER
+
+    clarification = ClarificationRecord(
+        decision_reason="REQUIRED_INPUT_INSUFFICIENT",
+        expected_customer_input=("order_id",),
+        use_case_id="UC-SH-02",
+    )
+
+    request.set_active_clarification(clarification)
+
+    message = InboundMessage(
+        message_ref="msg-010",
+        text="My order number is 12345.",
+        channel=Channel.EMAIL,
+    )
+
+    result = router.process(
+        message=message,
+        request=request,
+        config_release_id="config-v1",
+    )
+
+    assert result.route == Level1Route.LEVEL_2
+    assert result.request is request
+
+    assert request.state == RequestState.PROCESSING
+    assert request.active_clarification is None
+
+    assert request.clarification_history == [
+        clarification,
+    ]
+
+    assert request.message_refs == [
+        "msg-010",
+    ]
+
+    assert request.accepted_business_message_refs == [
+        "msg-010",
+    ]
+
+def test_understandable_message_not_interpretable_in_context_continues_classification():
+    router = Level1Router(
+        basic_message_check=UnderstandableBasicMessageCheck(),
+        message_classifier=FixedMessageClassifier(
+            MessageType.HUMAN_AGENT_REQUEST
+        ),
+        context_interpreter=UninterpretableContextInterpreter(),
+        continuation_checker=UnusedContinuationChecker(),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.AWAITING_CUSTOMER
+
+    message = InboundMessage(
+        message_ref="msg-011",
+        text="I want to speak to a human.",
+        channel=Channel.EMAIL,
+    )
+
+    result = router.process(
+        message=message,
+        request=request,
+        config_release_id="config-v1",
+    )
+
+    assert result.route == Level1Route.LEVEL_6
+    assert result.request is request
+    assert result.decision_reason == "HUMAN_REQUESTED"
+
+    assert request.state == RequestState.PROCESSING
+    assert request.message_refs == ["msg-011"]
     assert request.accepted_business_message_refs == []

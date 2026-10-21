@@ -173,8 +173,27 @@ class Level1Router:
             )
 
         if message_type == MessageType.ACTIONABLE_CONTEXTUAL:
-            raise NotImplementedError(
-                "Continuation routing is not implemented yet."
+            if self._continuation_checker.is_same_logical_case(
+                message=message,
+                request=request,
+            ):
+                request.add_accepted_business_message_ref(
+                    message.message_ref
+                )
+                request.resolve_active_clarification()
+                request.state = RequestState.PROCESSING
+
+                return Level1Result(
+                    route=Level1Route.LEVEL_2,
+                    request=request,
+                )
+
+            request.state = RequestState.PROCESSING
+
+            return Level1Result(
+                route=Level1Route.LEVEL_6,
+                request=request,
+                decision_reason="MULTIPLE_ISSUES",
             )
 
         raise ValueError(
