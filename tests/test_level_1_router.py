@@ -88,7 +88,7 @@ def test_ununderstandable_message_without_attachments_ends_without_request():
     assert result.request is None
 
 
-def test_ununderstandable_message_with_attachments_creates_request():
+def test_ununderstandable_message_with_attachments_does_not_create_request():
     router = create_router()
 
     message = InboundMessage(
@@ -104,15 +104,8 @@ def test_ununderstandable_message_with_attachments_creates_request():
         config_release_id="config-v1",
     )
 
-    assert result.route == Level1Route.LEVEL_2
-    assert result.request is not None
-
-    assert result.request.request_channel == Channel.WEBCHAT
-    assert result.request.config_release_id == "config-v1"
-
-    assert result.request.message_refs == ["msg-002"]
-    assert result.request.accepted_business_message_refs == []
-    assert result.request.attachment_refs == ["att-001", "att-002"]
+    assert result.route == Level1Route.END
+    assert result.request is None
 
 def test_communication_only_without_request_ends_without_creating_request():
     router = Level1Router(

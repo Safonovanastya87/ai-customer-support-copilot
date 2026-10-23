@@ -49,50 +49,18 @@ class Level1Router:
         message: InboundMessage,
         config_release_id: str,
     ) -> Level1Result:
-        if self._basic_message_check.is_understandable(message):
-            message_type = self._message_classifier.classify(
-                message=message,
+        if not self._basic_message_check.is_understandable(message):
+            return Level1Result(
+                route=Level1Route.END,
                 request=None,
             )
 
-            if message_type == MessageType.COMMUNICATION_ONLY:
-                return Level1Result(
-                    route=Level1Route.END,
-                    request=None,
-                )
+        message_type = self._message_classifier.classify(
+            message=message,
+            request=None,
+        )
 
-            request = Request(
-                request_channel=message.channel,
-                config_release_id=config_release_id,
-            )
-
-            request.add_message_ref(message.message_ref)
-
-            for attachment_ref in message.attachment_refs:
-                request.add_attachment_ref(attachment_ref)
-
-            if message_type == MessageType.HUMAN_AGENT_REQUEST:
-                return Level1Result(
-                    route=Level1Route.LEVEL_6,
-                    request=request,
-                    decision_reason="HUMAN_REQUESTED",
-                )
-
-            if message_type == MessageType.ACTIONABLE_CONTEXTUAL:
-                request.add_accepted_business_message_ref(
-                    message.message_ref
-                )
-
-                return Level1Result(
-                    route=Level1Route.LEVEL_2,
-                    request=request,
-                )
-
-            raise ValueError(
-                f"Unsupported message type: {message_type}"
-            )
-
-        if not message.attachment_refs:
+        if message_type == MessageType.COMMUNICATION_ONLY:
             return Level1Result(
                 route=Level1Route.END,
                 request=None,
@@ -108,9 +76,25 @@ class Level1Router:
         for attachment_ref in message.attachment_refs:
             request.add_attachment_ref(attachment_ref)
 
-        return Level1Result(
-            route=Level1Route.LEVEL_2,
-            request=request,
+        if message_type == MessageType.HUMAN_AGENT_REQUEST:
+            return Level1Result(
+                route=Level1Route.LEVEL_6,
+                request=request,
+                decision_reason="HUMAN_REQUESTED",
+            )
+
+        if message_type == MessageType.ACTIONABLE_CONTEXTUAL:
+            request.add_accepted_business_message_ref(
+                message.message_ref
+            )
+
+            return Level1Result(
+                route=Level1Route.LEVEL_2,
+                request=request,
+            )
+
+        raise ValueError(
+            f"Unsupported message type: {message_type}"
         )
 
     def _process_awaiting_customer(
