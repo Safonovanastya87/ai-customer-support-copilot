@@ -284,9 +284,11 @@ Copilot never analyzes attachments:
 - no image recognition;
 - no document interpretation.
 
-Attachment references are retained with customer message evidence and forwarded unchanged on handoff.
+The Channel / Integration Layer retains every inbound customer message and its attachment references durably before Level 1 processing.
 
-An attachment-only inbound creates a Request and proceeds to Use Case identification/clarification rather than being discarded by the no-Request BASIC path.
+Attachment presence alone does not create a business Request and does not make otherwise unintelligible standalone input actionable. With `Request = NONE`, if the standalone customer input is not sufficiently understandable to classify or start business processing, the normal no-Request BASIC path applies regardless of whether attachments are present.
+
+If a Request is created or continued for another valid reason, the relevant attachment references are retained unchanged with Request evidence and forwarded unchanged on handoff.
 
 ## 16. Decision Result Contract
 

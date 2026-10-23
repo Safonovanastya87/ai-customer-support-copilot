@@ -54,23 +54,16 @@ If the standalone customer text is understandable enough to classify or continue
 
 - continue to Message Type.
 
-If it is not understandable and there are **no attachments**:
+If the standalone customer input is not sufficiently understandable to classify or start a business Request, regardless of whether one or more attachments are present:
 
+- the Channel / Integration Layer has already stored the inbound message metadata and any attachment references durably;
+- do not create a Request solely because an attachment is present;
 - send the approved static message according to Language Policy;
 - no Request is created;
 - optional/no-Request delivery-failure rule applies;
 - end.
 
-If it is not understandable but the message contains one or more attachments:
-
-- create Request;
-- `owner = COPILOT`;
-- `request_channel = current channel`;
-- `state = PROCESSING`;
-- append current message reference to `message_refs`;
-- store attachment references in `attachment_refs` without analyzing the attachment;
-- do not add the message to `accepted_business_message_refs` unless business text was actually accepted;
-- go to **Level 2**, where insufficient textual intent may result in `CLARIFY`.
+Attachments do not make otherwise unintelligible input actionable. If a Request is created for another valid reason, such as understandable actionable/contextual business content or an explicit Human Agent Request, its attachment references are retained unchanged as Request evidence and the attachment content is not analyzed by Copilot.
 
 ### HUMAN AGENT REQUEST
 
