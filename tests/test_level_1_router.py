@@ -28,7 +28,7 @@ class UnusedContextInterpreter:
 class UnusedContinuationChecker:
     def is_same_logical_case(self, message, request):
         raise AssertionError("Continuation checker should not be called.")
-    
+
 class UnderstandableBasicMessageCheck:
     def is_understandable(
         self,
@@ -42,7 +42,7 @@ class FixedMessageClassifier:
         self._message_type = message_type
 
     def classify(self, message, request):
-        return self._message_type    
+        return self._message_type
 
 class UninterpretableContextInterpreter:
     def is_interpretable(self, message, request):
@@ -86,6 +86,7 @@ def test_ununderstandable_message_without_attachments_ends_without_request():
 
     assert result.route == Level1Route.END
     assert result.request is None
+    assert result.decision is None
 
 
 def test_ununderstandable_message_with_attachments_does_not_create_request():
@@ -157,7 +158,10 @@ def test_human_agent_request_creates_request_and_routes_to_level_6():
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is not None
-    assert result.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert result.decision.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision.support_draft_required is False
 
     assert result.request.message_refs == ["msg-004"]
     assert result.request.accepted_business_message_refs == []
@@ -188,6 +192,7 @@ def test_actionable_message_creates_request_and_routes_to_level_2():
 
     assert result.route == Level1Route.LEVEL_2
     assert result.request is not None
+    assert result.decision is None
 
     assert result.request.request_channel == Channel.WEBCHAT
     assert result.request.config_release_id == "config-v1"
@@ -226,7 +231,10 @@ def test_uninterpretable_message_for_awaiting_request_routes_to_level_6():
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is request
-    assert result.decision_reason == "UNINTERPRETABLE_IN_CONTEXT"
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert result.decision.decision_reason == "UNINTERPRETABLE_IN_CONTEXT"
+    assert result.decision.support_draft_required is False
 
     assert request.state == RequestState.PROCESSING
     assert request.message_refs == ["msg-old", "msg-new"]
@@ -263,7 +271,10 @@ def test_human_agent_request_for_awaiting_request_routes_to_level_6():
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is request
-    assert result.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert result.decision.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision.support_draft_required is False
 
     assert request.state == RequestState.PROCESSING
     assert request.message_refs == ["msg-006"]
@@ -299,7 +310,10 @@ def test_communication_only_for_awaiting_request_keeps_awaiting_customer():
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is request
-    assert result.decision_reason == "COMMUNICATION_ONLY"
+    assert result.decision is not None
+    assert result.decision.action == "COMMUNICATION_ONLY_RESPONSE"
+    assert result.decision.decision_reason == "COMMUNICATION_ONLY"
+    assert result.decision.support_draft_required is None
 
     assert request.state == RequestState.AWAITING_CUSTOMER
     assert request.message_refs == ["msg-007"]
@@ -336,6 +350,7 @@ def test_actionable_continuation_for_awaiting_request_routes_to_level_2():
 
     assert result.route == Level1Route.LEVEL_2
     assert result.request is request
+    assert result.decision is None
 
     assert request.state == RequestState.PROCESSING
     assert request.message_refs == ["msg-008"]
@@ -376,7 +391,10 @@ def test_new_independent_issue_for_awaiting_request_routes_to_level_6():
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is request
-    assert result.decision_reason == "MULTIPLE_ISSUES"
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert result.decision.decision_reason == "MULTIPLE_ISSUES"
+    assert result.decision.support_draft_required is False
 
     assert request.state == RequestState.PROCESSING
 
@@ -431,6 +449,7 @@ def test_same_case_continuation_resolves_active_clarification_and_keeps_history(
 
     assert result.route == Level1Route.LEVEL_2
     assert result.request is request
+    assert result.decision is None
 
     assert request.state == RequestState.PROCESSING
     assert request.active_clarification is None
@@ -477,7 +496,10 @@ def test_understandable_message_not_interpretable_in_context_continues_classific
 
     assert result.route == Level1Route.LEVEL_6
     assert result.request is request
-    assert result.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert result.decision.decision_reason == "HUMAN_REQUESTED"
+    assert result.decision.support_draft_required is False
 
     assert request.state == RequestState.PROCESSING
     assert request.message_refs == ["msg-011"]

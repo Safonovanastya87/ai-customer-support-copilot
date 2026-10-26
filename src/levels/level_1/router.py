@@ -3,6 +3,7 @@ from src.levels.level_1.context_interpreter import ContextInterpreter
 from src.levels.level_1.continuation_checker import ContinuationChecker
 from src.levels.level_1.message_classifier import MessageClassifier
 from src.levels.level_1.result import Level1Result, Level1Route
+from src.models.decision_result import DecisionResult
 from src.models.inbound_message import InboundMessage
 from src.models.message_type import MessageType
 from src.models.request import Request
@@ -80,7 +81,11 @@ class Level1Router:
             return Level1Result(
                 route=Level1Route.LEVEL_6,
                 request=request,
-                decision_reason="HUMAN_REQUESTED",
+                decision=DecisionResult(
+                    action="HANDOFF_TO_SUPPORT",
+                    decision_reason="HUMAN_REQUESTED",
+                    support_draft_required=False,
+                ),
             )
 
         if message_type == MessageType.ACTIONABLE_CONTEXTUAL:
@@ -122,7 +127,11 @@ class Level1Router:
             return Level1Result(
                 route=Level1Route.LEVEL_6,
                 request=request,
-                decision_reason="UNINTERPRETABLE_IN_CONTEXT",
+                decision=DecisionResult(
+                    action="HANDOFF_TO_SUPPORT",
+                    decision_reason="UNINTERPRETABLE_IN_CONTEXT",
+                    support_draft_required=False,
+                ),
             )
 
         return self._classify_awaiting_customer_message(
@@ -146,14 +155,21 @@ class Level1Router:
             return Level1Result(
                 route=Level1Route.LEVEL_6,
                 request=request,
-                decision_reason="HUMAN_REQUESTED",
+                decision=DecisionResult(
+                    action="HANDOFF_TO_SUPPORT",
+                    decision_reason="HUMAN_REQUESTED",
+                    support_draft_required=False,
+                ),
             )
 
         if message_type == MessageType.COMMUNICATION_ONLY:
             return Level1Result(
                 route=Level1Route.LEVEL_6,
                 request=request,
-                decision_reason="COMMUNICATION_ONLY",
+                decision=DecisionResult(
+                    action="COMMUNICATION_ONLY_RESPONSE",
+                    decision_reason="COMMUNICATION_ONLY",
+                ),
             )
 
         if message_type == MessageType.ACTIONABLE_CONTEXTUAL:
@@ -177,7 +193,11 @@ class Level1Router:
             return Level1Result(
                 route=Level1Route.LEVEL_6,
                 request=request,
-                decision_reason="MULTIPLE_ISSUES",
+                decision=DecisionResult(
+                    action="HANDOFF_TO_SUPPORT",
+                    decision_reason="MULTIPLE_ISSUES",
+                    support_draft_required=False,
+                ),
             )
 
         raise ValueError(

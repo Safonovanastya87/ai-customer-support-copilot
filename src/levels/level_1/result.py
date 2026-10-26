@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from src.models.decision_result import DecisionResult
 from src.models.request import Request
 
 
@@ -14,4 +15,4 @@ class Level1Route(str, Enum):
 class Level1Result:
     route: Level1Route
     request: Request | None
-    decision_reason: str | None = None
+    decision: DecisionResult | None = None
