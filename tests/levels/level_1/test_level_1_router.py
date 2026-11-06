@@ -1,13 +1,21 @@
+"""Unit tests for Level 1 inbound-message routing.
+
+The tests use deterministic test doubles so Level1Router behaviour can be
+verified independently from language-processing implementations.
+"""
+
 from src.levels.level_1.result import Level1Route
 from src.levels.level_1.router import Level1Router
 from src.models.channel import Channel
+from src.models.clarification import ClarificationRecord
 from src.models.inbound_message import InboundMessage
 from src.models.message_type import MessageType
 from src.models.request import Request
 from src.models.request_state import RequestState
-from src.models.clarification import ClarificationRecord
 
 
+# Test doubles provide controlled dependency behaviour so each test exercises
+# one specific Level 1 routing branch.
 class UnunderstandableBasicMessageCheck:
     def is_understandable(
         self,
@@ -18,16 +26,24 @@ class UnunderstandableBasicMessageCheck:
 
 class UnusedMessageClassifier:
     def classify(self, message, request):
-        raise AssertionError("Message classifier should not be called.")
+        raise AssertionError(
+            "Message classifier should not be called."
+        )
+
 
 class UnusedContextInterpreter:
     def is_interpretable(self, message, request):
-        raise AssertionError("Context interpreter should not be called.")
+        raise AssertionError(
+            "Context interpreter should not be called."
+        )
 
 
 class UnusedContinuationChecker:
     def is_same_logical_case(self, message, request):
-        raise AssertionError("Continuation checker should not be called.")
+        raise AssertionError(
+            "Continuation checker should not be called."
+        )
+
 
 class UnderstandableBasicMessageCheck:
     def is_understandable(
@@ -38,22 +54,31 @@ class UnderstandableBasicMessageCheck:
 
 
 class FixedMessageClassifier:
-    def __init__(self, message_type: MessageType) -> None:
+    def __init__(
+        self,
+        message_type: MessageType,
+    ) -> None:
         self._message_type = message_type
 
     def classify(self, message, request):
         return self._message_type
 
+
 class UninterpretableContextInterpreter:
     def is_interpretable(self, message, request):
         return False
+
 
 class InterpretableContextInterpreter:
     def is_interpretable(self, message, request):
         return True
 
+
 class FixedContinuationChecker:
-    def __init__(self, is_same_logical_case: bool) -> None:
+    def __init__(
+        self,
+        is_same_logical_case: bool,
+    ) -> None:
         self._is_same_logical_case = is_same_logical_case
 
     def is_same_logical_case(self, message, request):
@@ -61,6 +86,7 @@ class FixedContinuationChecker:
 
 
 def create_router() -> Level1Router:
+    """Create a router configured for the unintelligible-message scenario."""
     return Level1Router(
         basic_message_check=UnunderstandableBasicMessageCheck(),
         message_classifier=UnusedMessageClassifier(),
@@ -108,6 +134,7 @@ def test_ununderstandable_message_with_attachments_does_not_create_request():
     assert result.route == Level1Route.END
     assert result.request is None
 
+
 def test_communication_only_without_request_ends_without_creating_request():
     router = Level1Router(
         basic_message_check=UnderstandableBasicMessageCheck(),
@@ -132,6 +159,7 @@ def test_communication_only_without_request_ends_without_creating_request():
 
     assert result.route == Level1Route.END
     assert result.request is None
+
 
 def test_human_agent_request_creates_request_and_routes_to_level_6():
     router = Level1Router(
@@ -167,6 +195,7 @@ def test_human_agent_request_creates_request_and_routes_to_level_6():
     assert result.request.accepted_business_message_refs == []
     assert result.request.attachment_refs == ["att-001"]
 
+
 def test_actionable_message_creates_request_and_routes_to_level_2():
     router = Level1Router(
         basic_message_check=UnderstandableBasicMessageCheck(),
@@ -200,6 +229,7 @@ def test_actionable_message_creates_request_and_routes_to_level_2():
     assert result.request.message_refs == ["msg-005"]
     assert result.request.accepted_business_message_refs == ["msg-005"]
     assert result.request.attachment_refs == ["att-002"]
+
 
 def test_uninterpretable_message_for_awaiting_request_routes_to_level_6():
     router = Level1Router(
@@ -241,6 +271,7 @@ def test_uninterpretable_message_for_awaiting_request_routes_to_level_6():
     assert request.attachment_refs == ["att-001"]
     assert request.accepted_business_message_refs == []
 
+
 def test_human_agent_request_for_awaiting_request_routes_to_level_6():
     router = Level1Router(
         basic_message_check=UnunderstandableBasicMessageCheck(),
@@ -279,6 +310,7 @@ def test_human_agent_request_for_awaiting_request_routes_to_level_6():
     assert request.state == RequestState.PROCESSING
     assert request.message_refs == ["msg-006"]
     assert request.accepted_business_message_refs == []
+
 
 def test_communication_only_for_awaiting_request_keeps_awaiting_customer():
     router = Level1Router(
@@ -319,6 +351,7 @@ def test_communication_only_for_awaiting_request_keeps_awaiting_customer():
     assert request.message_refs == ["msg-007"]
     assert request.accepted_business_message_refs == []
 
+
 def test_actionable_continuation_for_awaiting_request_routes_to_level_2():
     router = Level1Router(
         basic_message_check=UnunderstandableBasicMessageCheck(),
@@ -356,6 +389,7 @@ def test_actionable_continuation_for_awaiting_request_routes_to_level_2():
     assert request.message_refs == ["msg-008"]
     assert request.accepted_business_message_refs == ["msg-008"]
     assert request.attachment_refs == ["att-008"]
+
 
 def test_new_independent_issue_for_awaiting_request_routes_to_level_6():
     router = Level1Router(
@@ -403,6 +437,8 @@ def test_new_independent_issue_for_awaiting_request_routes_to_level_6():
         "msg-009",
     ]
 
+    # The independent issue remains part of message history but must not
+    # become accepted business context for the existing Request.
     assert request.accepted_business_message_refs == [
         "msg-old",
     ]
@@ -410,6 +446,7 @@ def test_new_independent_issue_for_awaiting_request_routes_to_level_6():
     assert request.attachment_refs == [
         "att-009",
     ]
+
 
 def test_same_case_continuation_resolves_active_clarification_and_keeps_history():
     router = Level1Router(
@@ -452,6 +489,9 @@ def test_same_case_continuation_resolves_active_clarification_and_keeps_history(
     assert result.decision is None
 
     assert request.state == RequestState.PROCESSING
+
+    # Resolving the clarification clears the active slot while preserving
+    # the clarification record in history.
     assert request.active_clarification is None
 
     assert request.clarification_history == [
@@ -465,6 +505,7 @@ def test_same_case_continuation_resolves_active_clarification_and_keeps_history(
     assert request.accepted_business_message_refs == [
         "msg-010",
     ]
+
 
 def test_understandable_message_not_interpretable_in_context_continues_classification():
     router = Level1Router(

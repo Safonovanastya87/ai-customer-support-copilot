@@ -1,3 +1,5 @@
+"""Smoke test for the application entry point."""
+
 from src.app.main import main
 
 
@@ -6,4 +8,7 @@ def test_application_can_start(capsys):
 
     captured = capsys.readouterr()
 
-    assert captured.out.strip() == "Anas Shop Customer Support Copilot MLP"
+    assert (
+        captured.out.strip()
+        == "Anas Shop Customer Support Copilot MLP"
+    )
