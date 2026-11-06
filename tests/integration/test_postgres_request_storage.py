@@ -1,19 +1,24 @@
+"""Integration tests for PostgreSQL Request persistence."""
+
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from src.adapters.database import create_database_engine
 from src.adapters.request_record import RequestRecord
 from src.adapters.request_storage import PostgresRequestStorage
+from src.models.channel import Channel
 from src.models.clarification import ClarificationRecord
 from src.models.request import Request
 from src.models.request_state import RequestState
-from src.models.channel import Channel
+
 
 def create_request() -> Request:
+    """Create a minimal valid Request for persistence tests."""
     return Request(
         request_channel=Channel.EMAIL,
         config_release_id="config-v1",
     )
+
 
 def test_request_can_be_saved_and_loaded_from_postgres():
     engine = create_database_engine()
@@ -34,6 +39,7 @@ def test_request_can_be_saved_and_loaded_from_postgres():
         assert loaded_request.use_case_id == "UC-SH-02"
 
     finally:
+        # Always remove test data, even when an assertion fails.
         with Session(engine) as session:
             session.execute(
                 delete(RequestRecord).where(
@@ -66,6 +72,7 @@ def test_existing_request_can_be_updated_in_postgres():
         assert loaded_request.use_case_id == "UC-RT-03"
 
     finally:
+        # Keep the database isolated between integration tests.
         with Session(engine) as session:
             session.execute(
                 delete(RequestRecord).where(
@@ -130,6 +137,7 @@ def test_request_context_is_preserved_in_postgres():
         assert loaded_request.closure_reason == "TEST_CLOSURE"
 
     finally:
+        # Remove the persisted Request regardless of the test result.
         with Session(engine) as session:
             session.execute(
                 delete(RequestRecord).where(

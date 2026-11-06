@@ -1,3 +1,5 @@
+"""Tests for the InboundMessage domain model."""
+
 from src.models.channel import Channel
 from src.models.inbound_message import InboundMessage
 

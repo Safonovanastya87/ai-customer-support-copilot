@@ -1,9 +1,13 @@
+"""Unit tests for the Request domain model."""
+
+from src.models.channel import Channel
+from src.models.clarification import ClarificationRecord
 from src.models.request import Request
 from src.models.request_state import RequestState
-from src.models.clarification import ClarificationRecord
-from src.models.channel import Channel
+
 
 def create_request() -> Request:
+    """Create a minimal valid Request for domain-model tests."""
     return Request(
         request_channel=Channel.EMAIL,
         config_release_id="config-v1",
@@ -22,10 +26,12 @@ def test_request_lists_are_independent():
     request_1 = create_request()
     request_2 = create_request()
 
+    # Mutable list fields must be created separately for every Request.
     request_1.message_refs.append("msg-001")
 
     assert request_1.message_refs == ["msg-001"]
     assert request_2.message_refs == []
+
 
 def test_message_ref_is_not_duplicated():
     request = create_request()
@@ -52,6 +58,7 @@ def test_attachment_ref_is_not_duplicated():
     request.add_attachment_ref("att-001")
 
     assert request.attachment_refs == ["att-001"]
+
 
 def test_use_case_can_be_set():
     request = create_request()
@@ -81,6 +88,7 @@ def test_same_use_case_is_not_added_to_history():
     assert request.use_case_id == "UC-SH-02"
     assert request.use_case_history == []
 
+
 def test_active_clarification_is_stored_in_history():
     request = create_request()
 
@@ -108,5 +116,7 @@ def test_active_clarification_can_be_resolved_without_losing_history():
     request.set_active_clarification(clarification)
     request.resolve_active_clarification()
 
+    # Resolving a clarification clears only the active value;
+    # its historical record must remain available.
     assert request.active_clarification is None
     assert request.clarification_history == [clarification]

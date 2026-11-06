@@ -1,4 +1,4 @@
-﻿AC_ID,Level,Use_Case_ID,Scenario_ID,Category,Given,When,Then,Priority,Status,Notes
+AC_ID,Level,Use_Case_ID,Scenario_ID,Category,Given,When,Then,Priority,Status,Notes
 GAC-001,GLOBAL,,,ROUTING,A customer explicitly asks to speak to a human agent.,The inbound message is classified.,A Request is created or continued and the Decision Result is HANDOFF_TO_SUPPORT with decision_reason = HUMAN_REQUESTED and support_draft_required = false.,P1,DRAFT,Source: levels/level_1.md.
 GAC-002,GLOBAL,,,MESSAGE_CLASSIFICATION,There is no active Request and the customer message contains no actionable or contextual business content.,The message is classified as COMMUNICATION_ONLY.,An approved courtesy/static response may be sent and no business Request is created.,P1,DRAFT,Source: levels/level_1.md; rules/supporting_rules.md §6.
 GAC-003,GLOBAL,,,MESSAGE_CLASSIFICATION,A message contains courtesy/social wording together with actionable or contextual business content.,The message is classified.,The business-relevant content takes precedence and the message is not treated as COMMUNICATION_ONLY.,P1,DRAFT,Source: levels/level_1.md; rules/supporting_rules.md §6.
