@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+class UseCaseConfigurationSemanticError(ValueError):
+    """Raised when Use Case configuration is semantically invalid."""
+
 
 @dataclass(frozen=True)
 class UseCaseConfiguration:

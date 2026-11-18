@@ -11,10 +11,12 @@ from src.levels.level_2.result import Level2Route
 from src.levels.level_2.router import Level2Router
 from src.levels.level_2.use_case_configuration import (
     UseCaseConfiguration,
+    UseCaseConfigurationSemanticError,
 )
 from src.levels.level_2.use_case_identifier import (
     UseCaseIdentificationOutcome,
     UseCaseIdentificationResult,
+    UseCaseIdentificationSemanticError,
 )
 from src.models.channel import Channel
 from src.models.clarification import ClarificationRecord
@@ -93,6 +95,21 @@ class FailingUseCaseConfigurationProvider:
     def get(self, use_case_id: str):
         raise RuntimeError(
             "Use Case configuration loading failed"
+        )
+
+class SemanticFailingUseCaseIdentifier:
+    def identify(
+        self,
+        request: Request,
+    ):
+        raise UseCaseIdentificationSemanticError(
+            "Invalid Use Case identification semantics"
+        )
+
+class SemanticFailingUseCaseConfigurationProvider:
+    def get(self, use_case_id: str):
+        raise UseCaseConfigurationSemanticError(
+            "Invalid Use Case configuration"
         )
 
 
@@ -782,3 +799,84 @@ def test_use_case_configuration_technical_failure_is_propagated():
     # The Use Case is assigned before its configuration is loaded, so it
     # remains on the Request even when configuration loading fails.
     assert request.use_case_id == "UC-SH-02"
+
+def test_use_case_identification_semantic_error_routes_to_business_logic_error():
+    router = Level2Router(
+        logical_case_checker=(
+            SingleIssueLogicalCaseChecker()
+        ),
+        use_case_identifier=(
+            SemanticFailingUseCaseIdentifier()
+        ),
+        use_case_configuration_provider=(
+            UnusedUseCaseConfigurationProvider()
+        ),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.PROCESSING
+
+    result = router.process(
+        request=request
+    )
+
+    assert result.route == Level2Route.LEVEL_6
+    assert result.request is request
+
+    assert result.decision is not None
+    assert (
+        result.decision.action
+        == "HANDOFF_TO_SUPPORT"
+    )
+    assert (
+        result.decision.decision_reason
+        == "BUSINESS_LOGIC_CONFIGURATION_ERROR"
+    )
+    assert (
+        result.decision.support_draft_required
+        is False
+    )
+
+    assert request.state == RequestState.PROCESSING
+    assert request.use_case_id is None
+
+def test_use_case_configuration_semantic_failure_routes_to_business_logic_error():
+    router = Level2Router(
+        logical_case_checker=SingleIssueLogicalCaseChecker(),
+        use_case_identifier=FixedUseCaseIdentifier(
+            UseCaseIdentificationResult(
+                outcome=(
+                    UseCaseIdentificationOutcome
+                    .SUPPORTED_USE_CASE
+                ),
+                use_case_id="UC-SH-01",
+            )
+        ),
+        use_case_configuration_provider=(
+            SemanticFailingUseCaseConfigurationProvider()
+        ),
+    )
+
+    request = Request(
+        request_channel=Channel.EMAIL,
+        config_release_id="config-v1",
+    )
+    request.state = RequestState.PROCESSING
+
+    result = router.process(request=request)
+
+    assert result.route == Level2Route.LEVEL_6
+    assert result.request is request
+
+    assert result.decision is not None
+    assert result.decision.action == "HANDOFF_TO_SUPPORT"
+    assert (
+        result.decision.decision_reason
+        == "BUSINESS_LOGIC_CONFIGURATION_ERROR"
+    )
+    assert result.decision.support_draft_required is False
+
+    assert request.use_case_id == "UC-SH-01"

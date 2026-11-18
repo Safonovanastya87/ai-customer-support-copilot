@@ -4,10 +4,12 @@ from src.levels.level_2.logical_case_checker import LogicalCaseChecker
 from src.levels.level_2.result import Level2Result, Level2Route
 from src.levels.level_2.use_case_configuration import (
     UseCaseConfigurationProvider,
+    UseCaseConfigurationSemanticError,
 )
 from src.levels.level_2.use_case_identifier import (
     UseCaseIdentificationOutcome,
     UseCaseIdentifier,
+    UseCaseIdentificationSemanticError,
 )
 from src.models.channel import Channel
 from src.models.decision_result import DecisionResult
@@ -52,11 +54,27 @@ class Level2Router:
                 ),
             )
 
-        identification = self._use_case_identifier.identify(
-            request=request,
-        )
+        try:
+            identification = self._use_case_identifier.identify(
+                request=request,
+            )
+        except UseCaseIdentificationSemanticError:
+            # Semantic errors in Use Case identification are treated
+            # as business logic configuration errors.
+            return Level2Result(
+                route=Level2Route.LEVEL_6,
+                request=request,
+                decision=DecisionResult(
+                    action="HANDOFF_TO_SUPPORT",
+                    decision_reason=(
+                        "BUSINESS_LOGIC_CONFIGURATION_ERROR"
+                    ),
+                    support_draft_required=False,
+                ),
+            )
 
-        # Requests clearly unrelated to Anas Shop receive an out-of-scope response.
+        # Requests clearly unrelated to Anas Shop receive
+        # an out-of-scope response.
         if (
             identification.outcome
             == UseCaseIdentificationOutcome.UNSUPPORTED_BY_ANAS_SHOP
@@ -86,7 +104,8 @@ class Level2Router:
                 ),
             )
 
-        # Genuine ambiguity between supported Use Cases is not resolved by guessing.
+        # Genuine ambiguity between supported Use Cases
+        # is not resolved by guessing.
         if (
             identification.outcome
             == UseCaseIdentificationOutcome.USE_CASE_AMBIGUITY
@@ -105,7 +124,8 @@ class Level2Router:
             identification.outcome
             == UseCaseIdentificationOutcome.USE_CASE_INPUT_INSUFFICIENT
         ):
-            # Level 2 allows only one Use Case clarification attempt per Request.
+            # Level 2 allows only one Use Case clarification
+            # attempt per Request.
             clarification_already_used = any(
                 clarification.decision_reason
                 == "USE_CASE_INPUT_INSUFFICIENT"
@@ -160,13 +180,27 @@ class Level2Router:
                 identification.use_case_id
             )
 
-            configuration = (
-                self._use_case_configuration_provider.get(
-                    identification.use_case_id
+            try:
+                configuration = (
+                    self._use_case_configuration_provider.get(
+                        identification.use_case_id
+                    )
                 )
-            )
+            except UseCaseConfigurationSemanticError:
+                return Level2Result(
+                    route=Level2Route.LEVEL_6,
+                    request=request,
+                    decision=DecisionResult(
+                        action="HANDOFF_TO_SUPPORT",
+                        decision_reason=(
+                            "BUSINESS_LOGIC_CONFIGURATION_ERROR"
+                        ),
+                        support_draft_required=False,
+                    ),
+                )
 
-            # Restricted actions require an explicit configured handoff reason.
+            # Restricted actions require an explicit configured
+            # handoff reason.
             if (
                 configuration.restricted_action_safety
                 and configuration.restricted_action_decision_reason is None
@@ -183,14 +217,16 @@ class Level2Router:
                     ),
                 )
 
-            # Email Requests may continue to private processing on Level 3.
+            # Email Requests may continue to private processing
+            # on Level 3.
             if request.request_channel == Channel.EMAIL:
                 return Level2Result(
                     route=Level2Route.LEVEL_3,
                     request=request,
                 )
 
-            # Restricted actions from Webchat always require human support.
+            # Restricted actions from Webchat always require
+            # human support.
             if (
                 request.request_channel == Channel.WEBCHAT
                 and configuration.restricted_action_safety
@@ -201,7 +237,8 @@ class Level2Router:
                     decision=DecisionResult(
                         action="HANDOFF_TO_SUPPORT",
                         decision_reason=(
-                            configuration.restricted_action_decision_reason
+                            configuration
+                            .restricted_action_decision_reason
                         ),
                         support_draft_required=False,
                     ),
@@ -213,8 +250,8 @@ class Level2Router:
                 in configuration.data_sources
             )
 
-            # Webchat may continue when no private OMS access or restricted
-            # action is required.
+            # Webchat may continue when no private OMS access
+            # or restricted action is required.
             if (
                 request.request_channel == Channel.WEBCHAT
                 and not requires_oms
