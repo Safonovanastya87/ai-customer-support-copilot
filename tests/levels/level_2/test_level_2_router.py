@@ -97,6 +97,7 @@ class FailingUseCaseConfigurationProvider:
             "Use Case configuration loading failed"
         )
 
+
 class SemanticFailingUseCaseIdentifier:
     def identify(
         self,
@@ -105,6 +106,7 @@ class SemanticFailingUseCaseIdentifier:
         raise UseCaseIdentificationSemanticError(
             "Invalid Use Case identification semantics"
         )
+
 
 class SemanticFailingUseCaseConfigurationProvider:
     def get(self, use_case_id: str):
@@ -367,6 +369,7 @@ def test_supported_use_case_sets_use_case_and_routes_to_level_3():
                 UseCaseConfiguration(
                     use_case_id="UC-SH-02",
                     data_sources=("Shipping Policy",),
+                    required_customer_input=(),
                     restricted_action_safety=False,
                 )
             )
@@ -406,6 +409,7 @@ def test_supported_webchat_without_oms_routes_to_level_3():
                 UseCaseConfiguration(
                     use_case_id="UC-SH-01",
                     data_sources=("Shipping Policy",),
+                    required_customer_input=(),
                     restricted_action_safety=False,
                 )
             )
@@ -447,6 +451,7 @@ def test_supported_webchat_with_oms_routes_to_channel_redirection():
                         "Order Management System",
                         "Shipping Policy",
                     ),
+                    required_customer_input=("order_id",),
                     restricted_action_safety=False,
                 )
             )
@@ -494,6 +499,7 @@ def test_supported_webchat_with_restricted_action_routes_to_handoff():
                         "Order Management System",
                         "Refund Policy",
                     ),
+                    required_customer_input=("order_id",),
                     restricted_action_safety=True,
                     restricted_action_decision_reason=(
                         "REFUND_ACTION_REQUIRES_HUMAN"
@@ -545,6 +551,7 @@ def test_restricted_action_safety_has_priority_over_channel_redirection():
                         "Order Management System",
                         "Refund Policy",
                     ),
+                    required_customer_input=("order_id",),
                     restricted_action_safety=True,
                     restricted_action_decision_reason=(
                         "REFUND_ACTION_REQUIRES_HUMAN"
@@ -592,6 +599,7 @@ def test_supported_use_case_unchanged_keeps_history_empty():
                 UseCaseConfiguration(
                     use_case_id="UC-SH-02",
                     data_sources=("Shipping Policy",),
+                    required_customer_input=(),
                     restricted_action_safety=False,
                 )
             )
@@ -630,6 +638,7 @@ def test_supported_use_case_change_moves_previous_id_to_history():
                 UseCaseConfiguration(
                     use_case_id="UC-SH-02",
                     data_sources=("Shipping Policy",),
+                    required_customer_input=(),
                     restricted_action_safety=False,
                 )
             )
@@ -710,6 +719,7 @@ def test_restricted_action_without_decision_reason_routes_to_business_logic_erro
                         "Order Management System",
                         "Refund Policy",
                     ),
+                    required_customer_input=("order_id",),
                     restricted_action_safety=True,
                     restricted_action_decision_reason=None,
                 )
@@ -800,6 +810,7 @@ def test_use_case_configuration_technical_failure_is_propagated():
     # remains on the Request even when configuration loading fails.
     assert request.use_case_id == "UC-SH-02"
 
+
 def test_use_case_identification_semantic_error_routes_to_business_logic_error():
     router = Level2Router(
         logical_case_checker=(
@@ -842,6 +853,7 @@ def test_use_case_identification_semantic_error_routes_to_business_logic_error()
 
     assert request.state == RequestState.PROCESSING
     assert request.use_case_id is None
+
 
 def test_use_case_configuration_semantic_failure_routes_to_business_logic_error():
     router = Level2Router(

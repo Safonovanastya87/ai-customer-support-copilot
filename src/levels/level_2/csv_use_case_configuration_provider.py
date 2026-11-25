@@ -43,6 +43,11 @@ class CsvUseCaseConfigurationProvider:
                     "Required column missing: Data_Sources"
                 )
 
+            if "Required_Customer_Input" not in fieldnames:
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: Required_Customer_Input"
+                )
+
             if "Restricted_Action_Safety" not in fieldnames:
                 raise UseCaseConfigurationSemanticError(
                     "Required column missing: Restricted_Action_Safety"
@@ -96,6 +101,17 @@ class CsvUseCaseConfigurationProvider:
                     "Data_Sources is required"
                 )
 
+            # Required customer input is stored as a semicolon-separated
+            # CSV value. NONE means that no customer input is required.
+            required_customer_input = tuple(
+                field.strip()
+                for field in row["Required_Customer_Input"].split(";")
+                if (
+                    field.strip()
+                    and field.strip() != "NONE"
+                )
+            )
+
             # Restricted_Action_Safety accepts only YES or NO.
             safety_value = (
                 row["Restricted_Action_Safety"]
@@ -135,6 +151,7 @@ class CsvUseCaseConfigurationProvider:
             return UseCaseConfiguration(
                 use_case_id=current_use_case_id,
                 data_sources=data_sources,
+                required_customer_input=required_customer_input,
                 restricted_action_safety=(
                     restricted_action_safety
                 ),

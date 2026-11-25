@@ -14,6 +14,7 @@ from src.models.request import Request
 from src.models.request_state import RequestState
 
 
+
 # Test doubles provide controlled dependency behaviour so each test exercises
 # one specific Level 1 routing branch.
 class UnunderstandableBasicMessageCheck:
@@ -83,6 +84,7 @@ class FixedContinuationChecker:
 
     def is_same_logical_case(self, message, request):
         return self._is_same_logical_case
+
 
 
 def create_router() -> Level1Router:
