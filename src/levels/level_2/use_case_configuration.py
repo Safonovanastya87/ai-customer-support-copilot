@@ -4,12 +4,17 @@ from dataclasses import dataclass
 from typing import Protocol
 
 
+class UseCaseConfigurationSemanticError(ValueError):
+    """Raised when Use Case configuration is semantically invalid."""
+
+
 @dataclass(frozen=True)
 class UseCaseConfiguration:
     """Configuration required to route and safely process a supported Use Case."""
 
     use_case_id: str
     data_sources: tuple[str, ...]
+    required_customer_input: tuple[str, ...]
     restricted_action_safety: bool
     restricted_action_decision_reason: str | None = None
 

@@ -31,6 +31,10 @@ class Request:
     use_case_id: str | None = None
     use_case_history: list[str] = field(default_factory=list)
 
+    # Authorization state for OMS/private processing.
+    authorization: str | None = None
+    authorized_order_id: str | None = None
+
     # Current clarification and clarification history for this Request.
     active_clarification: ClarificationRecord | None = None
     clarification_history: list[ClarificationRecord] = field(
@@ -75,8 +79,6 @@ class Request:
         use_case_id: str,
     ) -> None:
         """Update the current Use Case and preserve a changed previous value."""
-        # Re-identifying the same Use Case must not create
-        # duplicate history entries.
         if (
             self.use_case_id is not None
             and self.use_case_id != use_case_id

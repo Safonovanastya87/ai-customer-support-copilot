@@ -5,6 +5,7 @@ from pathlib import Path
 
 from src.levels.level_2.use_case_configuration import (
     UseCaseConfiguration,
+    UseCaseConfigurationSemanticError,
 )
 
 
@@ -30,43 +31,134 @@ class CsvUseCaseConfigurationProvider:
         ) as csv_file:
             reader = csv.DictReader(csv_file)
 
-            for row in reader:
-                if row["Use_Case_ID"] != use_case_id:
-                    continue
+            fieldnames = reader.fieldnames or []
 
-                # Data sources are stored as a semicolon-separated CSV value
-                # and converted into the tuple used by the domain contract.
-                data_sources = tuple(
-                    source.strip()
-                    for source in row["Data_Sources"].split(";")
+            if "Use_Case_ID" not in fieldnames:
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: Use_Case_ID"
                 )
 
-                # CSV stores the safety flag as YES/NO; the application uses bool.
-                restricted_action_safety = (
-                    row["Restricted_Action_Safety"].strip()
-                    == "YES"
+            if "Data_Sources" not in fieldnames:
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: Data_Sources"
                 )
 
-                decision_reason = (
-                    row[
-                        "Restricted_Action_Decision_Reason"
-                    ].strip()
+            if "Required_Customer_Input" not in fieldnames:
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: Required_Customer_Input"
                 )
 
-                # NONE represents the absence of a configured decision reason.
-                if decision_reason == "NONE":
-                    decision_reason = None
-
-                return UseCaseConfiguration(
-                    use_case_id=row["Use_Case_ID"],
-                    data_sources=data_sources,
-                    restricted_action_safety=(
-                        restricted_action_safety
-                    ),
-                    restricted_action_decision_reason=(
-                        decision_reason
-                    ),
+            if "Restricted_Action_Safety" not in fieldnames:
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: Restricted_Action_Safety"
                 )
+
+            if (
+                "Restricted_Action_Decision_Reason"
+                not in fieldnames
+            ):
+                raise UseCaseConfigurationSemanticError(
+                    "Required column missing: "
+                    "Restricted_Action_Decision_Reason"
+                )
+
+            rows = list(reader)
+
+        # Validate Use Case IDs before loading a specific configuration.
+        seen_use_case_ids: set[str] = set()
+
+        for row in rows:
+            current_use_case_id = row["Use_Case_ID"].strip()
+
+            if not current_use_case_id:
+                raise UseCaseConfigurationSemanticError(
+                    "Use_Case_ID is required"
+                )
+
+            if current_use_case_id in seen_use_case_ids:
+                raise UseCaseConfigurationSemanticError(
+                    f"Duplicate Use_Case_ID: {current_use_case_id}"
+                )
+
+            seen_use_case_ids.add(current_use_case_id)
+
+        for row in rows:
+            current_use_case_id = row["Use_Case_ID"].strip()
+
+            if current_use_case_id != use_case_id:
+                continue
+
+            # Data sources are stored as a semicolon-separated CSV value
+            # and converted into the tuple used by the domain contract.
+            data_sources = tuple(
+                source.strip()
+                for source in row["Data_Sources"].split(";")
+                if source.strip()
+            )
+
+            if not data_sources:
+                raise UseCaseConfigurationSemanticError(
+                    "Data_Sources is required"
+                )
+
+            # Required customer input is stored as a semicolon-separated
+            # CSV value. NONE means that no customer input is required.
+            required_customer_input = tuple(
+                field.strip()
+                for field in row["Required_Customer_Input"].split(";")
+                if (
+                    field.strip()
+                    and field.strip() != "NONE"
+                )
+            )
+
+            # Restricted_Action_Safety accepts only YES or NO.
+            safety_value = (
+                row["Restricted_Action_Safety"]
+                .strip()
+            )
+
+            if safety_value not in {"YES", "NO"}:
+                raise UseCaseConfigurationSemanticError(
+                    "Restricted_Action_Safety must be YES or NO"
+                )
+
+            restricted_action_safety = (
+                safety_value == "YES"
+            )
+
+            decision_reason = (
+                row[
+                    "Restricted_Action_Decision_Reason"
+                ].strip()
+            )
+
+            # NONE and blank values represent the absence
+            # of a configured decision reason.
+            if decision_reason in {"NONE", ""}:
+                decision_reason = None
+
+            if (
+                restricted_action_safety
+                and decision_reason is None
+            ):
+                raise UseCaseConfigurationSemanticError(
+                    "Restricted_Action_Decision_Reason "
+                    "is required when "
+                    "Restricted_Action_Safety is YES"
+                )
+
+            return UseCaseConfiguration(
+                use_case_id=current_use_case_id,
+                data_sources=data_sources,
+                required_customer_input=required_customer_input,
+                restricted_action_safety=(
+                    restricted_action_safety
+                ),
+                restricted_action_decision_reason=(
+                    decision_reason
+                ),
+            )
 
         # Unknown IDs are reported explicitly so callers can distinguish
         # invalid configuration from technical failures.
