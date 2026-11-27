@@ -18,6 +18,11 @@ class UseCaseConfiguration:
     restricted_action_safety: bool
     restricted_action_decision_reason: str | None = None
 
+    # OMS field requirements for Level 4 retrieval.
+    oms_required_fields: tuple[str, ...] = ()
+    oms_conditional_fields: tuple[str, ...] = ()
+    oms_optional_fields: tuple[str, ...] = ()
+
 
 class UseCaseConfigurationProvider(Protocol):
     """Defines how configuration is retrieved for a Use Case ID."""
